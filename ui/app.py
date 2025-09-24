@@ -20,11 +20,11 @@ st.title("Flashcards Creator")
 
 st.write("Paste two-column TSV: left = A (UserLanguage), right = B (TargetLanguage)")
 
-tsv_text = st.text_area("TSV (A\tB)", height=220)
+tsv_text = st.text_area("1️⃣ Paste the phrases in TSV format (A\tB) here", height=220)
 
 colType = st.columns([1])[0]
 with colType:
-    card_type = st.selectbox("Card type", ["Recall", "Recognise"], index=0)
+    card_type = st.selectbox("2️⃣ Choose the card type", ["Recall", "Recognise"], index=0)
 
 colA, colB, colLang = st.columns([1, 1, 2])
 with colA:
@@ -42,12 +42,12 @@ with colStab:
     gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05)
 
 default_deck_title = date.today().isoformat()
-deck_title = st.text_input("Deck title", value=default_deck_title, help="Nom final du paquet (suffixe)")
+deck_title = st.text_input("3️⃣ Name your deck", value=default_deck_title, help="Final deck name (suffix)")
 col1, col2 = st.columns([1, 1])
 with col1:
     preview = st.button("Preview")
 with col2:
-    generate = st.button("Generate .apkg")
+    generate = st.button("4️⃣ Click Here to Generate the .apkg")
 
 parsed = []
 if (preview or generate) and tsv_text.strip():
