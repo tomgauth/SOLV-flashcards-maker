@@ -55,6 +55,20 @@ def build_simple_apkg(
             else:
                 # fallback to any available voices
                 resolved_voice_ids = [v.get("voice_id", "") for v in list_voices()]
+
+        # Filter out "famous" voices (not permitted) based on labels when available
+        try:
+            all_vs = list_voices()
+            famous_ids = {v.get("voice_id", "") for v in all_vs if str((v.get("labels") or {}).get("category", "")).lower() == "famous"}
+            if famous_ids:
+                before = len(resolved_voice_ids)
+                resolved_voice_ids = [vid for vid in resolved_voice_ids if vid not in famous_ids]
+                after = len(resolved_voice_ids)
+                if before != after:
+                    print(f"[build_simple_apkg] filtered famous voices: {before-after} removed")
+        except Exception:
+            # If labels are unavailable, continue; per-voice try/except below handles 401s
+            pass
     print(f"[build_simple_apkg] resolved voices: {len(resolved_voice_ids)} candidates")
 
     media_files: List[str] = []
@@ -64,24 +78,34 @@ def build_simple_apkg(
         user_language = r.get("A", "")
         target_language = r.get("B", "")
 
-        # Synthesize target text
-        chosen_voice = random.choice(resolved_voice_ids) if resolved_voice_ids else ""
+        # Synthesize target text with failover across voices
         audio_info = {"filename": "", "path": ""}
-        if target_language and chosen_voice:
-            print(f"[build_simple_apkg] row {idx} | voice={chosen_voice[:8]} | text='{target_language[:40]}'")
-            audio_info = synthesize_text(
-                target_language,
-                chosen_voice,
-                out_dir=tmp_media_dir,
-                stability=stability,
-                similarity_boost=similarity_boost,
-                style=style,
-                use_speaker_boost=use_speaker_boost,
-                speaking_rate=speaking_rate,
-            )
-            if audio_info.get("path"):
-                media_files.append(audio_info["path"])
-                print(f"[build_simple_apkg] row {idx} | audio_file={audio_info['filename']}")
+        if target_language and resolved_voice_ids:
+            candidate_voices = list(resolved_voice_ids)
+            random.shuffle(candidate_voices)
+            last_error = None
+            for voice_id in candidate_voices:
+                try:
+                    print(f"[build_simple_apkg] row {idx} | try voice={voice_id[:8]} | text='{target_language[:40]}'")
+                    audio_info = synthesize_text(
+                        target_language,
+                        voice_id,
+                        out_dir=tmp_media_dir,
+                        stability=stability,
+                        similarity_boost=similarity_boost,
+                        style=style,
+                        use_speaker_boost=use_speaker_boost,
+                        speaking_rate=speaking_rate,
+                    )
+                    if audio_info.get("path"):
+                        media_files.append(audio_info["path"])
+                        print(f"[build_simple_apkg] row {idx} | OK voice={voice_id[:8]} | file={audio_info['filename']}")
+                        break
+                except Exception as e:
+                    last_error = e
+                    print(f"[build_simple_apkg] row {idx} | voice failed {voice_id[:8]} | {e}")
+            if not audio_info.get("filename") and last_error:
+                print(f"[build_simple_apkg] row {idx} | all voices failed | {last_error}")
 
         target_audio_field = f"[sound:{audio_info['filename']}]" if audio_info.get("filename") else ""
 
