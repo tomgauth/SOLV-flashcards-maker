@@ -17,11 +17,11 @@ except Exception:
 
 
 # ---------- Helpers ----------
+ENV_API_KEY = "ELEVENLABS_API_KEY"
+
 def get_api_key() -> str | None:
-    # Priority: Streamlit Secrets -> ENV -> user input (sidebar)
-    key = st.secrets.get("ELEVENLABS_API_KEY", None) if hasattr(st, "secrets") else None
-    if not key:
-        key = os.getenv("ELEVENLABS_API_KEY")
+    # Priority: ENV -> session state -> user input (sidebar)
+    key = os.getenv(ENV_API_KEY)
     if not key:
         key = st.session_state.get("api_key")
     return key
