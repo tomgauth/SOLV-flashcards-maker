@@ -238,7 +238,7 @@ with adv2:
         value=st.session_state.settings.get("language_code", ""),
         placeholder="e.g., en, fr, vi (leave blank to auto-detect)"
     )
-    st.session_state.settings["language_code"] = lang.strip() or None
+    st.session_state.settings["language_code"] = lang.strip() if lang else None
 with adv3:
     seed_toggle = st.toggle("Use deterministic seed", value=bool(st.session_state.settings.get("seed") is not None))
     if seed_toggle:
