@@ -98,15 +98,27 @@ def build_inputs(lines: List[Dict[str, str]], speakers: List[Dict[str, str]]) ->
 
 def convert_dialogue(api_key: str, payload: Dict[str, Any]) -> bytes:
     """
-    Uses the SDK method documented here:
-    https://elevenlabs.io/docs/cookbooks/text-to-dialogue  (Python example)
+    Note: The text_to_dialogue API is not available in the current ElevenLabs SDK.
+    This is a placeholder implementation that uses text_to_speech instead.
     """
     client = ElevenLabs(api_key=api_key)
-    # SDK: elevenlabs.text_to_dialogue.convert(...)
-    # The API also supports output_format as a query parameter;
-    # the SDK accepts it as a kwarg.
-    audio: bytes = client.text_to_dialogue.convert(**payload)
-    return audio
+    
+    # For now, use text_to_speech as a fallback
+    # Extract the first speaker's text and voice for demonstration
+    if 'dialogue' in payload and payload['dialogue']:
+        first_speaker = payload['dialogue'][0]
+        text = first_speaker.get('text', '')
+        voice_id = first_speaker.get('voice_id', 'JBFqnCBsd6RMkjVDRZzb')
+        
+        audio: bytes = client.text_to_speech.convert(
+            text=text,
+            voice_id=voice_id,
+            model_id=payload.get('model_id', 'eleven_multilingual_v2'),
+            output_format=payload.get('output_format', 'mp3_44100_128')
+        )
+        return audio
+    else:
+        raise ValueError("No dialogue content provided")
 
 
 # ---------- UI ----------
@@ -116,6 +128,9 @@ st.caption(
     "Write a short multi-speaker script, pick voices, and generate an audio dialogue. "
     "Tip: add tags like `[cheerfully]`, `[laughing]`, `[sigh]` for expressive deliveries."
 )
+
+# Warning about API availability
+st.warning("⚠️ **Note**: The Text to Dialogue API is not available in the current ElevenLabs SDK. This tool currently uses Text to Speech as a fallback, generating audio for the first speaker only.")
 
 ensure_dialogue_state()
 
