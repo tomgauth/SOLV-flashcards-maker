@@ -104,11 +104,14 @@ def convert_dialogue(api_key: str, payload: Dict[str, Any]) -> bytes:
     client = ElevenLabs(api_key=api_key)
     
     # For now, use text_to_speech as a fallback
-    # Extract the first speaker's text and voice for demonstration
-    if 'dialogue' in payload and payload['dialogue']:
-        first_speaker = payload['dialogue'][0]
-        text = first_speaker.get('text', '')
-        voice_id = first_speaker.get('voice_id', 'JBFqnCBsd6RMkjVDRZzb')
+    # Extract the first speaker's text and voice from the inputs
+    if 'inputs' in payload and payload['inputs']:
+        first_input = payload['inputs'][0]
+        text = first_input.get('text', '')
+        voice_id = first_input.get('voice_id', 'JBFqnCBsd6RMkjVDRZzb')
+        
+        if not text:
+            raise ValueError("No text content found in dialogue inputs")
         
         audio: bytes = client.text_to_speech.convert(
             text=text,
