@@ -97,6 +97,8 @@ if 'enhanced_data' not in st.session_state:
     st.session_state.enhanced_data = []
 if 'warning_rows' not in st.session_state:
     st.session_state.warning_rows = []
+if 'voice_selections' not in st.session_state:
+    st.session_state.voice_selections = {}
 
 # Show input form only if we haven't parsed data yet
 if st.session_state.show_input:
@@ -191,6 +193,9 @@ if preview and st.session_state.show_input and 'tsv_text' in locals() and tsv_te
                 st.session_state.enhanced_data = enhanced_parsed
                 st.session_state.warning_rows = []
             
+            # Initialize voice selections for each row
+            st.session_state.voice_selections = {}
+            
             st.success(f"Parsed {len(transformed)} rows.")
             st.rerun()
             
@@ -202,6 +207,85 @@ if st.session_state.enhanced_data:
     enhanced_parsed = st.session_state.enhanced_data
     warning_rows = st.session_state.warning_rows
     parsed = st.session_state.parsed_data
+    
+    # Get available voices for the target language
+    @st.cache_data(show_spinner=False)
+    def _get_voices_for_language(language):
+        try:
+            groups = group_voices_by_language()
+            return groups.get(language, [])
+        except Exception:
+            return []
+    
+    available_voices = _get_voices_for_language(target_language_choice)
+    
+    # Create voice options for dropdown
+    voice_options = []
+    for voice_id, name in available_voices:
+        # Extract language code and accent from voice name
+        import re
+        lang_code = "Unknown"
+        accent = ""
+        
+        name_lower = name.lower()
+        if any(indicator in name_lower for indicator in ['french', 'français']):
+            lang_code = "FR"
+        elif any(indicator in name_lower for indicator in ['english', 'american', 'british']):
+            lang_code = "EN"
+        elif any(indicator in name_lower for indicator in ['italian', 'italiano']):
+            lang_code = "IT"
+        elif any(indicator in name_lower for indicator in ['vietnamese', 'vietnam']):
+            lang_code = "VI"
+        elif any(indicator in name_lower for indicator in ['turkish', 'türkçe']):
+            lang_code = "TR"
+        elif any(indicator in name_lower for indicator in ['spanish', 'español']):
+            lang_code = "ES"
+        elif any(indicator in name_lower for indicator in ['german', 'deutsch']):
+            lang_code = "DE"
+        elif any(indicator in name_lower for indicator in ['portuguese', 'português']):
+            lang_code = "PT"
+        elif any(indicator in name_lower for indicator in ['russian', 'русский']):
+            lang_code = "RU"
+        
+        # Extract accent information
+        if any(acc in name_lower for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
+            if 'american' in name_lower:
+                accent = "American"
+            elif 'british' in name_lower:
+                accent = "British"
+            elif 'parisian' in name_lower:
+                accent = "Parisian"
+            elif 'standard' in name_lower:
+                accent = "Standard"
+            elif 'canadian' in name_lower:
+                accent = "Canadian"
+            elif 'australian' in name_lower:
+                accent = "Australian"
+        
+        # Format display name
+        display_name = f"{lang_code}"
+        if accent:
+            display_name += f" ({accent})"
+        display_name += f" - {name}"
+        
+        voice_options.append((voice_id, display_name))
+    
+    # Add voice column to enhanced data
+    for i, row in enumerate(enhanced_parsed):
+        if i not in st.session_state.voice_selections:
+            # Set default voice (first available voice for this language)
+            if voice_options:
+                st.session_state.voice_selections[i] = voice_options[0][0]  # voice_id
+            else:
+                st.session_state.voice_selections[i] = None
+        
+        # Add voice display to row
+        selected_voice_id = st.session_state.voice_selections[i]
+        if selected_voice_id and voice_options:
+            selected_voice_name = next((name for vid, name in voice_options if vid == selected_voice_id), "Unknown")
+            row["Voice"] = selected_voice_name
+        else:
+            row["Voice"] = "No voice available"
     
     # Display the dataframe with conditional styling
     if warning_rows:
@@ -277,6 +361,40 @@ if st.session_state.enhanced_data:
     else:
         st.dataframe(enhanced_parsed, use_container_width=True)
     
+    # Voice selection interface
+    st.subheader("🎤 Voice Selection")
+    st.write(f"Select voices for each line in **{target_language_choice}**:")
+    
+    if voice_options:
+        # Create columns for voice selection
+        for i, row in enumerate(enhanced_parsed):
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"**Line {i+1}**: {row['B'][:50]}{'...' if len(row['B']) > 50 else ''}")
+            with col2:
+                current_voice_id = st.session_state.voice_selections.get(i, voice_options[0][0] if voice_options else None)
+                current_index = 0
+                if current_voice_id:
+                    try:
+                        current_index = next(j for j, (vid, _) in enumerate(voice_options) if vid == current_voice_id)
+                    except StopIteration:
+                        current_index = 0
+                
+                selected_voice = st.selectbox(
+                    f"Voice {i+1}",
+                    options=[opt[1] for opt in voice_options],
+                    index=current_index,
+                    key=f"voice_select_{i}",
+                    label_visibility="collapsed"
+                )
+                
+                # Update session state when selection changes
+                if selected_voice:
+                    selected_voice_id = next(opt[0] for opt in voice_options if opt[1] == selected_voice)
+                    st.session_state.voice_selections[i] = selected_voice_id
+    else:
+        st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
+    
     # Show summary analysis
     st.subheader("📊 Phrase Set Analysis")
     target_phrases = [row["B"] for row in parsed if row["B"].strip()]
@@ -306,8 +424,15 @@ if generate and st.session_state.parsed_data:
         }
         flag_root = FLAG_BY_LANG.get(target_language_choice, target_language_choice)
         hierarchical_deck_name = f"{flag_root}::{card_type}::{deck_title}".strip(":")
+        # Add voice selections to parsed data
+        parsed_with_voices = []
+        for i, row in enumerate(st.session_state.parsed_data):
+            row_with_voice = row.copy()
+            row_with_voice["voice_id"] = st.session_state.voice_selections.get(i)
+            parsed_with_voices.append(row_with_voice)
+        
         out_path = build_simple_apkg(
-            st.session_state.parsed_data,
+            parsed_with_voices,
             deck_name=hierarchical_deck_name,
             card_type=card_type.lower(),
             tts_language=target_language_choice,
