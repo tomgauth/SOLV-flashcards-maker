@@ -122,12 +122,8 @@ with colB:
 with colLang:
     target_language_choice = st.selectbox("Target language label", ["French", "Italian", "Vietnamese Central", "Russian"], index=0)
 
-# Additional generator settings: Speed and Stability + Deck title (with today as default)
-colSpeed, colStab = st.columns([1, 1])
-with colSpeed:
-    gen_speaking_rate = st.slider("Speed (deck)", 0.5, 1.5, 0.5, 0.05, help="0.5 par défaut (plus lent)")
-with colStab:
-    gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05)
+# Additional generator settings: Stability + Deck title (with today as default)
+gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05, help="Voice stability (1.0 = most stable)")
 
 default_deck_title = date.today().isoformat()
 deck_title = st.text_input("3️⃣ Name your deck", value=default_deck_title, help="Final deck name (suffix)")
@@ -314,7 +310,7 @@ if generate and st.session_state.parsed_data:
             card_type=card_type.lower(),
             tts_language=target_language_choice,
             stability=gen_stability,
-            speaking_rate=gen_speaking_rate,
+            speaking_rate=1.0,  # Use default natural speed
         )
 
         with open(out_path, "rb") as f:
@@ -494,9 +490,6 @@ with col_voice:
         st.write("No voices found for this language")
         selected_voice_id = None
 
-# Speed control
-speaking_rate = st.slider("⚡ Speed", 0.5, 1.5, 0.7, 0.05, help="Speech rate (0.5 = slow, 1.5 = fast)")
-
 # Generate button
 generate_btn = st.button("🔊 Generate Audio", type="primary")
 
@@ -516,7 +509,7 @@ if generate_btn:
                     stability=1.0,
                     similarity_boost=0.7,
                     style=0.0,
-                    speaking_rate=speaking_rate,
+                    speaking_rate=1.0,  # Use default natural speed
                 )
                 
                 with open(out["path"], "rb") as f:
