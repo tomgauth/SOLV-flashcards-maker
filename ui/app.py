@@ -272,22 +272,9 @@ if st.session_state.enhanced_data:
         voice_options.append((voice_id, display_name))
         print(f"DEBUG: Added voice option: {voice_id} -> {display_name}")
     
-    # Add voice column to enhanced data
+    # Add voice column to enhanced data (will be updated after voice assignment)
     for i, row in enumerate(enhanced_parsed):
-        if i not in st.session_state.voice_selections:
-            # Set default voice (first available voice for this language)
-            if voice_options:
-                st.session_state.voice_selections[i] = voice_options[0][0]  # voice_id
-            else:
-                st.session_state.voice_selections[i] = None
-        
-        # Add voice display to row
-        selected_voice_id = st.session_state.voice_selections[i]
-        if selected_voice_id and voice_options:
-            selected_voice_name = next((name for vid, name in voice_options if vid == selected_voice_id), "Unknown")
-            row["Voice"] = selected_voice_name
-        else:
-            row["Voice"] = "No voice available"
+        row["Voice"] = "Assigning..."  # Placeholder until voice is assigned
     
     # Display the dataframe with conditional styling
     if warning_rows:
@@ -348,7 +335,7 @@ if st.session_state.enhanced_data:
             st.success("✅ Formality pronouns have been automatically added to English phrases!")
             st.rerun()
         
-        # Create styled dataframe for warnings
+        # Create styled dataframe for warnings (will be updated after voice assignment)
         import pandas as pd
         df = pd.DataFrame(enhanced_parsed)
         
@@ -384,6 +371,24 @@ if st.session_state.enhanced_data:
     else:
         st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
         print(f"DEBUG: No voice options available for {target_language_choice}")
+    
+    # Re-display the dataframe with updated voice assignments
+    st.subheader("📋 Preview with Voice Assignments")
+    if warning_rows:
+        # Recreate styled dataframe with updated voice assignments
+        import pandas as pd
+        df_updated = pd.DataFrame(enhanced_parsed)
+        
+        # Apply orange background to warning rows
+        def highlight_warnings(row):
+            if row.name in warning_rows:
+                return ['background-color: #ffebcd'] * len(row)  # Light orange
+            return [''] * len(row)
+        
+        styled_df = df_updated.style.apply(highlight_warnings, axis=1)
+        st.dataframe(styled_df, use_container_width=True)
+    else:
+        st.dataframe(enhanced_parsed, use_container_width=True)
     
     # Show summary analysis
     st.subheader("📊 Phrase Set Analysis")
