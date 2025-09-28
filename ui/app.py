@@ -129,9 +129,11 @@ default_deck_title = date.today().isoformat()
 deck_title = st.text_input("3️⃣ Name your deck", value=default_deck_title, help="Final deck name (suffix)")
 col1, col2 = st.columns([1, 1])
 with col1:
-    preview = st.button("Preview")
+    preview = st.button("✅ Preview")
 with col2:
-    generate = st.button("4️⃣ Click Here to Generate the .apkg")
+    # Only enable generate button if preview has been completed
+    generate_enabled = st.session_state.enhanced_data and len(st.session_state.enhanced_data) > 0
+    generate = st.button("⬇️ Click Here to Generate the .apkg", disabled=not generate_enabled)
 
 # Handle preview and generate buttons
 if preview and st.session_state.show_input and 'tsv_text' in locals() and tsv_text.strip():
