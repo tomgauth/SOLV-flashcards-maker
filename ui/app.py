@@ -404,7 +404,14 @@ if analyze_btn and analyzer_text.strip():
 
 # --- TTS Test (ElevenLabs) ---
 st.markdown("---")
-st.subheader("TTS Test (ElevenLabs)")
+st.subheader("🎤 Voice Selection & TTS Test (ElevenLabs)")
+
+@st.cache_data(show_spinner=False)
+def _get_all_voices():
+    try:
+        return list_voices()
+    except Exception:
+        return []
 
 @st.cache_data(show_spinner=False)
 def _get_groups():
@@ -413,32 +420,124 @@ def _get_groups():
     except Exception:
         return {}
 
+# Voice Selection Section
+st.subheader("🎯 Select Voice by Language")
 
-tts_text = st.text_input("Texte à synthétiser", value="bonjour", help="Entrez le texte à lire à voix haute")
+# Get all voices
+all_voices = _get_all_voices()
+groups = _get_groups()
 
+# Target languages we want to show
+target_languages = ["French", "Italian", "English", "Vietnamese"]
 
+# Create columns for each target language
+lang_cols = st.columns(len(target_languages))
+
+selected_voices = {}
+for i, lang in enumerate(target_languages):
+    with lang_cols[i]:
+        st.write(f"**{lang}**")
+        
+        # Get voices for this language
+        lang_voices = groups.get(lang, [])
+        
+        if lang_voices:
+            # Create dropdown options with language - code - name format
+            voice_options = []
+            for voice_id, name in lang_voices:
+                # Find the full voice data to get language code
+                voice_data = next((v for v in all_voices if v.get("voice_id") == voice_id), {})
+                labels = voice_data.get("labels", {})
+                lang_code = labels.get("language", "Unknown")
+                accent = labels.get("accent", "")
+                
+                # Format: Language - Code - Name
+                display_name = f"{lang_code}"
+                if accent:
+                    display_name += f" ({accent})"
+                display_name += f" - {name}"
+                
+                voice_options.append((voice_id, display_name))
+            
+            # Create selectbox
+            if voice_options:
+                selected_voice = st.selectbox(
+                    f"Choose {lang} voice:",
+                    options=[opt[1] for opt in voice_options],
+                    key=f"voice_{lang.lower()}",
+                    help=f"Available {lang} voices"
+                )
+                
+                # Find the selected voice ID
+                selected_voice_id = next(opt[0] for opt in voice_options if opt[1] == selected_voice)
+                selected_voices[lang] = selected_voice_id
+            else:
+                st.write("No voices found")
+                selected_voices[lang] = None
+        else:
+            st.write("No voices found")
+            selected_voices[lang] = None
+
+# Show all available voices in an expander
+with st.expander("📋 All Available Voices"):
+    if all_voices:
+        st.write("**Complete voice list:**")
+        for voice in all_voices:
+            voice_id = voice.get("voice_id", "")
+            name = voice.get("name", "")
+            labels = voice.get("labels", {})
+            lang = labels.get("language", "Unknown")
+            accent = labels.get("accent", "")
+            
+            st.write(f"**{name}** ({voice_id[:8]}...) - {lang}" + (f" ({accent})" if accent else ""))
+    else:
+        st.error("No voices available. Check your ElevenLabs API key.")
+
+# TTS Test Section
+st.subheader("🔊 TTS Test")
+
+tts_text = st.text_input("Text to synthesize", value="bonjour", help="Enter text to convert to speech")
+
+# Language selection for testing
+test_lang = st.selectbox("Test language", target_languages, index=0)
+
+# Get the selected voice for the test language
+test_voice_id = selected_voices.get(test_lang)
+if test_voice_id:
+    st.info(f"Selected voice for {test_lang}: {test_voice_id[:8]}...")
+else:
+    st.warning(f"No voice selected for {test_lang}")
+
+# Legacy language-based selection (keeping for compatibility)
 col_lang, col_voice = st.columns([1, 2])
 with col_lang:
-    groups = _get_groups()
     available_langs = sorted(groups.keys()) if groups else ["Unknown"]
-    tts_language = st.selectbox("Langue", available_langs, index=available_langs.index("French") if "French" in available_langs else 0)
+    tts_language = st.selectbox("Legacy Language", available_langs, index=available_langs.index("French") if "French" in available_langs else 0)
 with col_voice:
     voice_options = groups.get(tts_language, [])
     voice_labels = [f"{name} ({vid[:6]})" for vid, name in voice_options] if voice_options else ["<aucune voix trouvée>"]
-    voice_selection = st.selectbox("Voix", voice_labels, index=0)
+    voice_selection = st.selectbox("Legacy Voice", voice_labels, index=0)
 
 speaking_rate = st.slider("Speed", 0.5, 1.5, 0.7, 0.05, help="0.7 par défaut (un peu plus lent que normal)")
 
 tts_col1, tts_col2 = st.columns([1, 1])
 with tts_col1:
-    synth_btn = st.button("Générer l'audio")
+    synth_btn = st.button("🔊 Generate Audio")
 
 if synth_btn:
-    if not voice_options:
-        st.error("Aucune voix disponible. Vérifiez ELEVENLABS_API_KEY et vos accès ElevenLabs.")
+    # Use the selected voice from the new interface
+    if test_voice_id:
+        voice_id = test_voice_id
+        st.info(f"Using selected {test_lang} voice: {voice_id[:8]}...")
     else:
-        idx = voice_labels.index(voice_selection) if voice_selection in voice_labels else 0
-        voice_id = voice_options[idx][0]
+        # Fallback to legacy selection
+        if not voice_options:
+            st.error("No voice available. Check your ELEVENLABS_API_KEY and ElevenLabs access.")
+        else:
+            idx = voice_labels.index(voice_selection) if voice_selection in voice_labels else 0
+            voice_id = voice_options[idx][0]
+    
+    if voice_id:
         try:
             out = synthesize_text(
                 tts_text,
@@ -452,9 +551,11 @@ if synth_btn:
             with open(out["path"], "rb") as f:
                 audio_bytes = f.read()
             st.audio(audio_bytes, format="audio/mp3")
-            st.download_button("Télécharger MP3", data=audio_bytes, file_name=out["filename"], mime="audio/mpeg")
-            st.success("Audio prêt")
+            st.download_button("📥 Download MP3", data=audio_bytes, file_name=out["filename"], mime="audio/mpeg")
+            st.success("✅ Audio ready!")
         except ElevenLabsError as e:
             st.error(str(e))
         except Exception as e:
-            st.error(f"Erreur TTS: {e}")
+            st.error(f"TTS Error: {e}")
+    else:
+        st.error("No voice selected. Please choose a voice from the selection above.")
