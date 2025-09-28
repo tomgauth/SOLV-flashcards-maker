@@ -122,7 +122,7 @@ with colA:
 with colB:
     user_col_choice = st.selectbox("UserLanguage column", ["1 (left)", "2 (right)"], index=1)
 with colLang:
-    target_language_choice = st.selectbox("Target language label", ["fr", "it", "vi", "ru", "en"], index=0)
+    target_language_choice = st.selectbox("Target language label", ["French", "Italian", "Vietnamese", "Russian", "English"], index=0)
 
 # Additional generator settings: Stability + Deck title (with today as default)
 gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05, help="Voice stability (1.0 = most stable)")
