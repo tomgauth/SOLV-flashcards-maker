@@ -404,14 +404,7 @@ if analyze_btn and analyzer_text.strip():
 
 # --- TTS Test (ElevenLabs) ---
 st.markdown("---")
-st.subheader("🎤 Voice Selection & TTS Test (ElevenLabs)")
-
-@st.cache_data(show_spinner=False)
-def _get_all_voices():
-    try:
-        return list_voices()
-    except Exception:
-        return []
+st.subheader("🎤 Text-to-Speech Generator")
 
 @st.cache_data(show_spinner=False)
 def _get_groups():
@@ -420,183 +413,139 @@ def _get_groups():
     except Exception:
         return {}
 
-# Voice Selection Section
-st.subheader("🎯 Select Voice by Language")
-
-# Get all voices
-all_voices = _get_all_voices()
+# Get available voices grouped by language
 groups = _get_groups()
 
-# Target languages we want to show
-target_languages = ["French", "Italian", "English", "Vietnamese"]
+# Input text
+tts_text = st.text_input("📝 Text to convert to speech", value="bonjour", help="Enter text to convert to speech")
 
-# Create columns for each target language
-lang_cols = st.columns(len(target_languages))
+# Language and voice selection
+col_lang, col_voice = st.columns([1, 2])
 
-selected_voices = {}
-for i, lang in enumerate(target_languages):
-    with lang_cols[i]:
-        st.write(f"**{lang}**")
-        
-        # Get voices for this language
-        lang_voices = groups.get(lang, [])
-        
-        if lang_voices:
-            # Create dropdown options with language - code - name format
-            voice_options = []
-            for voice_id, name in lang_voices:
-                # Find the full voice data to get language code
-                voice_data = next((v for v in all_voices if v.get("voice_id") == voice_id), {})
-                labels = voice_data.get("labels", {})
-                
-                # Extract 2-letter language code from labels
-                lang_code = "Unknown"
-                accent = ""
-                
-                # Look for 2-letter language code in labels
-                import re
-                for key, value in labels.items():
-                    value_str = str(value).lower()
-                    # Match 2-letter language code
-                    match = re.search(r'\b([a-z]{2})\b', value_str)
-                    if match:
-                        potential_code = match.group(1)
-                        if potential_code in ['fr', 'en', 'it', 'vi', 'tr', 'es', 'de', 'pt', 'ru', 'ja', 'ko', 'zh', 'ar', 'hi']:
-                            lang_code = potential_code.upper()
-                            break
-                
-                # Extract accent information
-                for key, value in labels.items():
-                    value_str = str(value).lower()
-                    if any(acc in value_str for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
-                        accent = str(value)
-                        break
-                
-                # Format: Language - Code - Name
-                display_name = f"{lang_code}"
-                if accent:
-                    display_name += f" ({accent})"
-                display_name += f" - {name}"
-                
-                voice_options.append((voice_id, display_name))
-            
-            # Create selectbox
-            if voice_options:
-                selected_voice = st.selectbox(
-                    f"Choose {lang} voice:",
-                    options=[opt[1] for opt in voice_options],
-                    key=f"voice_{lang.lower()}",
-                    help=f"Available {lang} voices"
-                )
-                
-                # Find the selected voice ID
-                selected_voice_id = next(opt[0] for opt in voice_options if opt[1] == selected_voice)
-                selected_voices[lang] = selected_voice_id
-            else:
-                st.write("No voices found")
-                selected_voices[lang] = None
-        else:
-            st.write("No voices found")
-            selected_voices[lang] = None
+with col_lang:
+    # Get available languages (sorted, with French first if available)
+    available_langs = sorted(groups.keys()) if groups else ["Unknown"]
+    if "French" in available_langs:
+        french_index = available_langs.index("French")
+        available_langs.insert(0, available_langs.pop(french_index))
+    
+    selected_language = st.selectbox("🌍 Language", available_langs, index=0)
 
-# Show all available voices in an expander
-with st.expander("📋 All Available Voices"):
-    if all_voices:
-        st.write("**Complete voice list:**")
-        for voice in all_voices:
-            voice_id = voice.get("voice_id", "")
-            name = voice.get("name", "")
-            labels = voice.get("labels", {})
-            
-            # Extract 2-letter language code from labels
+with col_voice:
+    # Get voices for selected language
+    lang_voices = groups.get(selected_language, [])
+    
+    if lang_voices:
+        # Create voice options with language code and accent info
+        voice_options = []
+        for voice_id, name in lang_voices:
+            # Extract language code and accent from voice name/labels
+            import re
             lang_code = "Unknown"
             accent = ""
             
-            import re
-            for key, value in labels.items():
-                value_str = str(value).lower()
-                # Match 2-letter language code
-                match = re.search(r'\b([a-z]{2})\b', value_str)
-                if match:
-                    potential_code = match.group(1)
-                    if potential_code in ['fr', 'en', 'it', 'vi', 'tr', 'es', 'de', 'pt', 'ru', 'ja', 'ko', 'zh', 'ar', 'hi']:
-                        lang_code = potential_code.upper()
-                        break
+            # Look for language indicators in the name
+            name_lower = name.lower()
+            if any(indicator in name_lower for indicator in ['french', 'français']):
+                lang_code = "FR"
+            elif any(indicator in name_lower for indicator in ['english', 'american', 'british']):
+                lang_code = "EN"
+            elif any(indicator in name_lower for indicator in ['italian', 'italiano']):
+                lang_code = "IT"
+            elif any(indicator in name_lower for indicator in ['vietnamese', 'vietnam']):
+                lang_code = "VI"
+            elif any(indicator in name_lower for indicator in ['turkish', 'türkçe']):
+                lang_code = "TR"
+            elif any(indicator in name_lower for indicator in ['spanish', 'español']):
+                lang_code = "ES"
+            elif any(indicator in name_lower for indicator in ['german', 'deutsch']):
+                lang_code = "DE"
+            elif any(indicator in name_lower for indicator in ['portuguese', 'português']):
+                lang_code = "PT"
+            elif any(indicator in name_lower for indicator in ['russian', 'русский']):
+                lang_code = "RU"
             
             # Extract accent information
-            for key, value in labels.items():
-                value_str = str(value).lower()
-                if any(acc in value_str for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
-                    accent = str(value)
-                    break
+            if any(acc in name_lower for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
+                if 'american' in name_lower:
+                    accent = "American"
+                elif 'british' in name_lower:
+                    accent = "British"
+                elif 'parisian' in name_lower:
+                    accent = "Parisian"
+                elif 'standard' in name_lower:
+                    accent = "Standard"
+                elif 'canadian' in name_lower:
+                    accent = "Canadian"
+                elif 'australian' in name_lower:
+                    accent = "Australian"
             
-            st.write(f"**{name}** ({voice_id[:8]}...) - {lang_code}" + (f" ({accent})" if accent else ""))
+            # Format display name
+            display_name = f"{lang_code}"
+            if accent:
+                display_name += f" ({accent})"
+            display_name += f" - {name}"
+            
+            voice_options.append((voice_id, display_name))
+        
+        selected_voice = st.selectbox("🎤 Voice", [opt[1] for opt in voice_options], index=0)
+        selected_voice_id = next(opt[0] for opt in voice_options if opt[1] == selected_voice)
     else:
-        st.error("No voices available. Check your ElevenLabs API key.")
+        st.write("No voices found for this language")
+        selected_voice_id = None
 
-# TTS Test Section
-st.subheader("🔊 TTS Test")
+# Speed control
+speaking_rate = st.slider("⚡ Speed", 0.5, 1.5, 0.7, 0.05, help="Speech rate (0.5 = slow, 1.5 = fast)")
 
-tts_text = st.text_input("Text to synthesize", value="bonjour", help="Enter text to convert to speech")
+# Generate button
+generate_btn = st.button("🔊 Generate Audio", type="primary")
 
-# Language selection for testing
-test_lang = st.selectbox("Test language", target_languages, index=0)
-
-# Get the selected voice for the test language
-test_voice_id = selected_voices.get(test_lang)
-if test_voice_id:
-    st.info(f"Selected voice for {test_lang}: {test_voice_id[:8]}...")
-else:
-    st.warning(f"No voice selected for {test_lang}")
-
-# Legacy language-based selection (keeping for compatibility)
-col_lang, col_voice = st.columns([1, 2])
-with col_lang:
-    available_langs = sorted(groups.keys()) if groups else ["Unknown"]
-    tts_language = st.selectbox("Legacy Language", available_langs, index=available_langs.index("French") if "French" in available_langs else 0)
-with col_voice:
-    voice_options = groups.get(tts_language, [])
-    voice_labels = [f"{name} ({vid[:6]})" for vid, name in voice_options] if voice_options else ["<aucune voix trouvée>"]
-    voice_selection = st.selectbox("Legacy Voice", voice_labels, index=0)
-
-speaking_rate = st.slider("Speed", 0.5, 1.5, 0.7, 0.05, help="0.7 par défaut (un peu plus lent que normal)")
-
-tts_col1, tts_col2 = st.columns([1, 1])
-with tts_col1:
-    synth_btn = st.button("🔊 Generate Audio")
-
-if synth_btn:
-    # Use the selected voice from the new interface
-    if test_voice_id:
-        voice_id = test_voice_id
-        st.info(f"Using selected {test_lang} voice: {voice_id[:8]}...")
+# Audio generation and playback
+if generate_btn:
+    if not selected_voice_id:
+        st.error("No voice selected. Please choose a language and voice.")
+    elif not tts_text.strip():
+        st.error("Please enter text to convert to speech.")
     else:
-        # Fallback to legacy selection
-        if not voice_options:
-            st.error("No voice available. Check your ELEVENLABS_API_KEY and ElevenLabs access.")
-        else:
-            idx = voice_labels.index(voice_selection) if voice_selection in voice_labels else 0
-            voice_id = voice_options[idx][0]
-    
-    if voice_id:
         try:
-            out = synthesize_text(
-                tts_text,
-                voice_id,
-                out_dir=os.path.join(tempfile.gettempdir(), "eleven_media"),
-                stability=1.0,
-                similarity_boost=0.7,
-                style=0.0,
-                speaking_rate=speaking_rate,
-            )
-            with open(out["path"], "rb") as f:
-                audio_bytes = f.read()
-            st.audio(audio_bytes, format="audio/mp3")
-            st.download_button("📥 Download MP3", data=audio_bytes, file_name=out["filename"], mime="audio/mpeg")
-            st.success("✅ Audio ready!")
+            with st.spinner("Generating audio..."):
+                out = synthesize_text(
+                    tts_text,
+                    selected_voice_id,
+                    out_dir=os.path.join(tempfile.gettempdir(), "eleven_media"),
+                    stability=1.0,
+                    similarity_boost=0.7,
+                    style=0.0,
+                    speaking_rate=speaking_rate,
+                )
+                
+                with open(out["path"], "rb") as f:
+                    audio_bytes = f.read()
+                
+                # Play audio
+                st.audio(audio_bytes, format="audio/mp3")
+                
+                # Download button
+                st.download_button(
+                    "📥 Download MP3", 
+                    data=audio_bytes, 
+                    file_name=out["filename"], 
+                    mime="audio/mpeg"
+                )
+                
+                st.success("✅ Audio ready!")
+                
         except ElevenLabsError as e:
-            st.error(str(e))
+            st.error(f"ElevenLabs Error: {e}")
         except Exception as e:
             st.error(f"TTS Error: {e}")
+
+# Show all available voices in an expander
+with st.expander("📋 All Available Voices"):
+    if groups:
+        for lang, voices in sorted(groups.items()):
+            st.write(f"**{lang}** ({len(voices)} voices)")
+            for voice_id, name in voices:
+                st.write(f"  • {name} ({voice_id[:8]}...)")
     else:
-        st.error("No voice selected. Please choose a voice from the selection above.")
+        st.error("No voices available. Check your ElevenLabs API key.")
