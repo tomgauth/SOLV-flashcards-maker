@@ -448,8 +448,29 @@ for i, lang in enumerate(target_languages):
                 # Find the full voice data to get language code
                 voice_data = next((v for v in all_voices if v.get("voice_id") == voice_id), {})
                 labels = voice_data.get("labels", {})
-                lang_code = labels.get("language", "Unknown")
-                accent = labels.get("accent", "")
+                
+                # Extract 2-letter language code from labels
+                lang_code = "Unknown"
+                accent = ""
+                
+                # Look for 2-letter language code in labels
+                import re
+                for key, value in labels.items():
+                    value_str = str(value).lower()
+                    # Match 2-letter language code
+                    match = re.search(r'\b([a-z]{2})\b', value_str)
+                    if match:
+                        potential_code = match.group(1)
+                        if potential_code in ['fr', 'en', 'it', 'vi', 'tr', 'es', 'de', 'pt', 'ru', 'ja', 'ko', 'zh', 'ar', 'hi']:
+                            lang_code = potential_code.upper()
+                            break
+                
+                # Extract accent information
+                for key, value in labels.items():
+                    value_str = str(value).lower()
+                    if any(acc in value_str for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
+                        accent = str(value)
+                        break
                 
                 # Format: Language - Code - Name
                 display_name = f"{lang_code}"
@@ -486,10 +507,30 @@ with st.expander("📋 All Available Voices"):
             voice_id = voice.get("voice_id", "")
             name = voice.get("name", "")
             labels = voice.get("labels", {})
-            lang = labels.get("language", "Unknown")
-            accent = labels.get("accent", "")
             
-            st.write(f"**{name}** ({voice_id[:8]}...) - {lang}" + (f" ({accent})" if accent else ""))
+            # Extract 2-letter language code from labels
+            lang_code = "Unknown"
+            accent = ""
+            
+            import re
+            for key, value in labels.items():
+                value_str = str(value).lower()
+                # Match 2-letter language code
+                match = re.search(r'\b([a-z]{2})\b', value_str)
+                if match:
+                    potential_code = match.group(1)
+                    if potential_code in ['fr', 'en', 'it', 'vi', 'tr', 'es', 'de', 'pt', 'ru', 'ja', 'ko', 'zh', 'ar', 'hi']:
+                        lang_code = potential_code.upper()
+                        break
+            
+            # Extract accent information
+            for key, value in labels.items():
+                value_str = str(value).lower()
+                if any(acc in value_str for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
+                    accent = str(value)
+                    break
+            
+            st.write(f"**{name}** ({voice_id[:8]}...) - {lang_code}" + (f" ({accent})" if accent else ""))
     else:
         st.error("No voices available. Check your ElevenLabs API key.")
 

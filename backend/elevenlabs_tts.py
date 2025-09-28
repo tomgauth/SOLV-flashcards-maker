@@ -93,13 +93,144 @@ def voices_for_language_strict(language_label: str) -> List[Tuple[str, str]]:
 
 
 def group_voices_by_language() -> Dict[str, List[Tuple[str, str]]]:
-    """Group voices by labels['language'] when available; 'Unknown' otherwise."""
+    """Group voices by 2-letter language code extracted from labels; 'Unknown' otherwise."""
+    import re
     groups: Dict[str, List[Tuple[str, str]]] = {}
+    
+    # Language code to full name mapping
+    lang_code_to_name = {
+        "fr": "French",
+        "en": "English", 
+        "it": "Italian",
+        "vi": "Vietnamese",
+        "tr": "Turkish",
+        "es": "Spanish",
+        "de": "German",
+        "pt": "Portuguese",
+        "ru": "Russian",
+        "ja": "Japanese",
+        "ko": "Korean",
+        "zh": "Chinese",
+        "ar": "Arabic",
+        "hi": "Hindi",
+        "nl": "Dutch",
+        "sv": "Swedish",
+        "no": "Norwegian",
+        "da": "Danish",
+        "fi": "Finnish",
+        "pl": "Polish",
+        "cs": "Czech",
+        "hu": "Hungarian",
+        "ro": "Romanian",
+        "bg": "Bulgarian",
+        "hr": "Croatian",
+        "sk": "Slovak",
+        "sl": "Slovenian",
+        "et": "Estonian",
+        "lv": "Latvian",
+        "lt": "Lithuanian",
+        "el": "Greek",
+        "he": "Hebrew",
+        "th": "Thai",
+        "uk": "Ukrainian",
+        "ca": "Catalan",
+        "eu": "Basque",
+        "ga": "Irish",
+        "cy": "Welsh",
+        "mt": "Maltese",
+        "is": "Icelandic",
+        "mk": "Macedonian",
+        "sq": "Albanian",
+        "sr": "Serbian",
+        "bs": "Bosnian",
+        "me": "Montenegrin",
+        "mk": "Macedonian",
+        "sl": "Slovenian",
+        "sk": "Slovak",
+        "cs": "Czech",
+        "hu": "Hungarian",
+        "ro": "Romanian",
+        "bg": "Bulgarian",
+        "hr": "Croatian",
+        "et": "Estonian",
+        "lv": "Latvian",
+        "lt": "Lithuanian",
+        "el": "Greek",
+        "he": "Hebrew",
+        "th": "Thai",
+        "uk": "Ukrainian",
+        "ca": "Catalan",
+        "eu": "Basque",
+        "ga": "Irish",
+        "cy": "Welsh",
+        "mt": "Maltese",
+        "is": "Icelandic",
+        "mk": "Macedonian",
+        "sq": "Albanian",
+        "sr": "Serbian",
+        "bs": "Bosnian",
+        "me": "Montenegrin"
+    }
+    
     for v in list_voices():
         labels = v.get("labels", {}) or {}
-        lang = str(labels.get("language", "Unknown")).strip() or "Unknown"
-        key = lang
-        groups.setdefault(key, []).append((v.get("voice_id", ""), v.get("name", "")))
+        voice_id = v.get("voice_id", "")
+        name = v.get("name", "")
+        
+        # Look for 2-letter language code in labels
+        lang_code = None
+        for key, value in labels.items():
+            # Convert to string and look for 2-letter code pattern
+            value_str = str(value).lower()
+            # Match 2-letter language code with spaces before and after
+            match = re.search(r'\b([a-z]{2})\b', value_str)
+            if match:
+                potential_code = match.group(1)
+                if potential_code in lang_code_to_name:
+                    lang_code = potential_code
+                    break
+        
+        # If no language code found in labels, try to extract from voice name
+        if not lang_code:
+            name_lower = name.lower()
+            # Look for language indicators in the name
+            if any(indicator in name_lower for indicator in ['french', 'français']):
+                lang_code = 'fr'
+            elif any(indicator in name_lower for indicator in ['english', 'american', 'british']):
+                lang_code = 'en'
+            elif any(indicator in name_lower for indicator in ['italian', 'italiano']):
+                lang_code = 'it'
+            elif any(indicator in name_lower for indicator in ['vietnamese', 'vietnam']):
+                lang_code = 'vi'
+            elif any(indicator in name_lower for indicator in ['turkish', 'türkçe']):
+                lang_code = 'tr'
+            elif any(indicator in name_lower for indicator in ['spanish', 'español']):
+                lang_code = 'es'
+            elif any(indicator in name_lower for indicator in ['german', 'deutsch']):
+                lang_code = 'de'
+            elif any(indicator in name_lower for indicator in ['portuguese', 'português']):
+                lang_code = 'pt'
+            elif any(indicator in name_lower for indicator in ['russian', 'русский']):
+                lang_code = 'ru'
+            elif any(indicator in name_lower for indicator in ['japanese', '日本語']):
+                lang_code = 'ja'
+            elif any(indicator in name_lower for indicator in ['korean', '한국어']):
+                lang_code = 'ko'
+            elif any(indicator in name_lower for indicator in ['chinese', '中文']):
+                lang_code = 'zh'
+            elif any(indicator in name_lower for indicator in ['arabic', 'العربية']):
+                lang_code = 'ar'
+            elif any(indicator in name_lower for indicator in ['hindi', 'हिन्दी']):
+                lang_code = 'hi'
+        
+        # Use the full language name as the key
+        if lang_code:
+            key = lang_code_to_name.get(lang_code, lang_code.upper())
+        else:
+            key = "Unknown"
+            
+        groups.setdefault(key, []).append((voice_id, name))
+    
     return groups
 
 
