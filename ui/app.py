@@ -122,7 +122,7 @@ with colA:
 with colB:
     user_col_choice = st.selectbox("UserLanguage column", ["1 (left)", "2 (right)"], index=1)
 with colLang:
-    target_language_choice = st.selectbox("Target language label", ["French", "Italian", "Vietnamese Central", "Russian"], index=0)
+    target_language_choice = st.selectbox("Target language label", ["fr", "it", "vi", "ru", "en"], index=0)
 
 # Additional generator settings: Stability + Deck title (with today as default)
 gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05, help="Voice stability (1.0 = most stable)")
@@ -369,10 +369,11 @@ if generate and st.session_state.parsed_data:
     try:
         # Map language label to country flag for sub-deck root
         FLAG_BY_LANG = {
-            "French": "🇫🇷",
-            "Italian": "🇮🇹",
-            "Vietnamese Central": "🇻🇳",
-            "Russian": "🇷🇺",
+            "fr": "🇫🇷",
+            "it": "🇮🇹", 
+            "vi": "🇻🇳",
+            "ru": "🇷🇺",
+            "en": "🇺🇸",
         }
         flag_root = FLAG_BY_LANG.get(target_language_choice, target_language_choice)
         hierarchical_deck_name = f"{flag_root}::{card_type}::{deck_title}".strip(":")
