@@ -218,6 +218,7 @@ if st.session_state.enhanced_data:
             return []
     
     available_voices = _get_voices_for_language(target_language_choice)
+    print(f"DEBUG: Raw available voices for {target_language_choice}: {available_voices}")
     
     # Create voice options for dropdown
     voice_options = []
@@ -269,6 +270,7 @@ if st.session_state.enhanced_data:
         display_name += f" - {name}"
         
         voice_options.append((voice_id, display_name))
+        print(f"DEBUG: Added voice option: {voice_id} -> {display_name}")
     
     # Add voice column to enhanced data
     for i, row in enumerate(enhanced_parsed):
@@ -362,14 +364,26 @@ if st.session_state.enhanced_data:
         st.dataframe(enhanced_parsed, use_container_width=True)
     
     # Automatically assign voices in rotation for variety
+    print(f"DEBUG: Target language: {target_language_choice}")
+    print(f"DEBUG: Available voices count: {len(voice_options)}")
+    print(f"DEBUG: Voice options: {voice_options}")
+    print(f"DEBUG: Enhanced parsed data count: {len(enhanced_parsed)}")
+    
     if voice_options:
         for i, row in enumerate(enhanced_parsed):
             # Rotate through available voices
             voice_index = i % len(voice_options)
             selected_voice_id = voice_options[voice_index][0]
+            selected_voice_name = voice_options[voice_index][1]
             st.session_state.voice_selections[i] = selected_voice_id
+            
+            print(f"DEBUG: Line {i}: voice_index={voice_index}, voice_id={selected_voice_id}, voice_name={selected_voice_name}")
+            
+            # Update the voice display in the row
+            row["Voice"] = selected_voice_name
     else:
         st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
+        print(f"DEBUG: No voice options available for {target_language_choice}")
     
     # Show summary analysis
     st.subheader("📊 Phrase Set Analysis")
