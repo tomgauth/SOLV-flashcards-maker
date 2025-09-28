@@ -218,7 +218,6 @@ if st.session_state.enhanced_data:
             return []
     
     available_voices = _get_voices_for_language(target_language_choice)
-    print(f"DEBUG: Raw available voices for {target_language_choice}: {available_voices}")
     
     # Create voice options for dropdown
     voice_options = []
@@ -270,13 +269,22 @@ if st.session_state.enhanced_data:
         display_name += f" - {name}"
         
         voice_options.append((voice_id, display_name))
-        print(f"DEBUG: Added voice option: {voice_id} -> {display_name}")
     
-    # Add voice column to enhanced data (will be updated after voice assignment)
-    for i, row in enumerate(enhanced_parsed):
-        row["Voice"] = "Assigning..."  # Placeholder until voice is assigned
+    # Automatically assign voices in rotation for variety
+    if voice_options:
+        for i, row in enumerate(enhanced_parsed):
+            # Rotate through available voices
+            voice_index = i % len(voice_options)
+            selected_voice_id = voice_options[voice_index][0]
+            selected_voice_name = voice_options[voice_index][1]
+            st.session_state.voice_selections[i] = selected_voice_id
+            
+            # Update the voice display in the row
+            row["Voice"] = selected_voice_name
+    else:
+        st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
     
-    # Display the dataframe with conditional styling
+    # Show warning if any formal/informal pronouns found
     if warning_rows:
         st.warning(f"⚠️ Found {len(warning_rows)} phrase(s) with formal/informal 'you' pronouns that need clarification")
         
@@ -334,8 +342,11 @@ if st.session_state.enhanced_data:
             
             st.success("✅ Formality pronouns have been automatically added to English phrases!")
             st.rerun()
-        
-        # Create styled dataframe for warnings (will be updated after voice assignment)
+    
+    # Display the single preview table with voice assignments
+    st.subheader("📋 Preview with Voice Assignments")
+    if warning_rows:
+        # Create styled dataframe for warnings
         import pandas as pd
         df = pd.DataFrame(enhanced_parsed)
         
@@ -350,63 +361,9 @@ if st.session_state.enhanced_data:
     else:
         st.dataframe(enhanced_parsed, use_container_width=True)
     
-    # Automatically assign voices in rotation for variety
-    print(f"DEBUG: Target language: {target_language_choice}")
-    print(f"DEBUG: Available voices count: {len(voice_options)}")
-    print(f"DEBUG: Voice options: {voice_options}")
-    print(f"DEBUG: Enhanced parsed data count: {len(enhanced_parsed)}")
-    
-    if voice_options:
-        for i, row in enumerate(enhanced_parsed):
-            # Rotate through available voices
-            voice_index = i % len(voice_options)
-            selected_voice_id = voice_options[voice_index][0]
-            selected_voice_name = voice_options[voice_index][1]
-            st.session_state.voice_selections[i] = selected_voice_id
-            
-            print(f"DEBUG: Line {i}: voice_index={voice_index}, voice_id={selected_voice_id}, voice_name={selected_voice_name}")
-            
-            # Update the voice display in the row
-            row["Voice"] = selected_voice_name
-    else:
-        st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
-        print(f"DEBUG: No voice options available for {target_language_choice}")
-    
-    # Re-display the dataframe with updated voice assignments
-    st.subheader("📋 Preview with Voice Assignments")
-    if warning_rows:
-        # Recreate styled dataframe with updated voice assignments
-        import pandas as pd
-        df_updated = pd.DataFrame(enhanced_parsed)
-        
-        # Apply orange background to warning rows
-        def highlight_warnings(row):
-            if row.name in warning_rows:
-                return ['background-color: #ffebcd'] * len(row)  # Light orange
-            return [''] * len(row)
-        
-        styled_df = df_updated.style.apply(highlight_warnings, axis=1)
-        st.dataframe(styled_df, use_container_width=True)
-    else:
-        st.dataframe(enhanced_parsed, use_container_width=True)
-    
-    # Show summary analysis
-    st.subheader("📊 Phrase Set Analysis")
-    target_phrases = [row["B"] for row in parsed if row["B"].strip()]
-    analysis = analyze_phrase_set(target_phrases)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Words", analysis["total_words"])
-    with col2:
-        st.metric("Unique Words", analysis["unique_words"])
-    with col3:
-        st.metric("Word Overlap", f"{analysis['overlap_ratio']:.1%}")
-    
-    if analysis["difficulty_distribution"]:
-        st.subheader("🎯 Difficulty Distribution")
-        for band, count in sorted(analysis["difficulty_distribution"].items()):
-            st.write(f"**{band}**: {count} words")
+    # Generate button - right below the table
+    st.markdown("---")
+    generate = st.button("🎯 Generate .apkg", type="primary", disabled=not st.session_state.enhanced_data)
 
 if generate and st.session_state.parsed_data:
     try:
@@ -426,9 +383,6 @@ if generate and st.session_state.parsed_data:
             row_with_voice["voice_id"] = st.session_state.voice_selections.get(i)
             parsed_with_voices.append(row_with_voice)
         
-        print(f"DEBUG: Passing {len(parsed_with_voices)} rows with voice assignments to build_simple_apkg")
-        for i, row in enumerate(parsed_with_voices):
-            print(f"DEBUG: Row {i}: voice_id={row.get('voice_id', 'None')}")
         
         out_path = build_simple_apkg(
             parsed_with_voices,
@@ -440,14 +394,18 @@ if generate and st.session_state.parsed_data:
             use_preview_voices=True,  # Use the voice assignments from the preview table
         )
 
+        # Show success banner
+        st.success("🎉 Deck generated successfully!")
+        
+        # Download button
         with open(out_path, "rb") as f:
             st.download_button(
-                "Download deck.apkg",
+                "📥 Download deck.apkg",
                 data=f.read(),
                 file_name=f"{deck_title}.apkg",
                 mime="application/octet-stream",
+                type="primary"
             )
-        st.success("Deck generated!")
     except Exception as e:
         st.error(f"Failed to generate deck: {e}")
 
