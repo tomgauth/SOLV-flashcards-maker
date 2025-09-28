@@ -426,6 +426,10 @@ if generate and st.session_state.parsed_data:
             row_with_voice["voice_id"] = st.session_state.voice_selections.get(i)
             parsed_with_voices.append(row_with_voice)
         
+        print(f"DEBUG: Passing {len(parsed_with_voices)} rows with voice assignments to build_simple_apkg")
+        for i, row in enumerate(parsed_with_voices):
+            print(f"DEBUG: Row {i}: voice_id={row.get('voice_id', 'None')}")
+        
         out_path = build_simple_apkg(
             parsed_with_voices,
             deck_name=hierarchical_deck_name,
@@ -433,6 +437,7 @@ if generate and st.session_state.parsed_data:
             tts_language=target_language_choice,
             stability=gen_stability,
             speaking_rate=1.0,  # Use default natural speed
+            use_preview_voices=True,  # Use the voice assignments from the preview table
         )
 
         with open(out_path, "rb") as f:

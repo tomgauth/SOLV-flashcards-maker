@@ -20,6 +20,7 @@ def build_simple_apkg(
     style: float = 0.0,
     use_speaker_boost: bool = True,
     speaking_rate: float = 1.0,
+    use_preview_voices: bool = False,  # New parameter to use voice_id from each row
 ) -> str:
     print(f"[build_simple_apkg] start | pairs={len(pairs)} | deck='{deck_name}' | card_type={card_type} | tts_language={tts_language}")
     # Choose model by card_type (support 'recognise' and 'recognize')
@@ -81,8 +82,18 @@ def build_simple_apkg(
         # Synthesize target text with failover across voices
         audio_info = {"filename": "", "path": ""}
         if target_language and resolved_voice_ids:
-            candidate_voices = list(resolved_voice_ids)
-            random.shuffle(candidate_voices)
+            # Use specific voice from preview if available, otherwise fall back to random selection
+            if use_preview_voices and "voice_id" in r and r["voice_id"]:
+                # Use the specific voice assigned in the preview
+                assigned_voice_id = r["voice_id"]
+                candidate_voices = [assigned_voice_id]
+                print(f"[build_simple_apkg] row {idx} | using preview-assigned voice={assigned_voice_id[:8]} | text='{target_language[:40]}'")
+            else:
+                # Fall back to random selection from available voices
+                candidate_voices = list(resolved_voice_ids)
+                random.shuffle(candidate_voices)
+                print(f"[build_simple_apkg] row {idx} | using random voice selection | text='{target_language[:40]}'")
+            
             last_error = None
             for voice_id in candidate_voices:
                 try:
