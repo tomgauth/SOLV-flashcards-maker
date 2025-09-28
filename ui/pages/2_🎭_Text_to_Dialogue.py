@@ -98,30 +98,15 @@ def build_inputs(lines: List[Dict[str, str]], speakers: List[Dict[str, str]]) ->
 
 def convert_dialogue(api_key: str, payload: Dict[str, Any]) -> bytes:
     """
-    Note: The text_to_dialogue API is not available in the current ElevenLabs SDK.
-    This is a placeholder implementation that uses text_to_speech instead.
+    Uses the official ElevenLabs text_to_dialogue API
     """
     client = ElevenLabs(api_key=api_key)
     
-    # For now, use text_to_speech as a fallback
-    # Extract the first speaker's text and voice from the inputs
-    if 'inputs' in payload and payload['inputs']:
-        first_input = payload['inputs'][0]
-        text = first_input.get('text', '')
-        voice_id = first_input.get('voice_id', 'JBFqnCBsd6RMkjVDRZzb')
-        
-        if not text:
-            raise ValueError("No text content found in dialogue inputs")
-        
-        audio: bytes = client.text_to_speech.convert(
-            text=text,
-            voice_id=voice_id,
-            model_id=payload.get('model_id', 'eleven_multilingual_v2'),
-            output_format=payload.get('output_format', 'mp3_44100_128')
-        )
-        return audio
-    else:
-        raise ValueError("No dialogue content provided")
+    # Use the official text_to_dialogue API
+    audio: bytes = client.text_to_dialogue.convert(
+        inputs=payload['inputs']
+    )
+    return audio
 
 
 # ---------- UI ----------
@@ -132,8 +117,6 @@ st.caption(
     "Tip: add tags like `[cheerfully]`, `[laughing]`, `[sigh]` for expressive deliveries."
 )
 
-# Warning about API availability
-st.warning("⚠️ **Note**: The Text to Dialogue API is not available in the current ElevenLabs SDK. This tool currently uses Text to Speech as a fallback, generating audio for the first speaker only.")
 
 ensure_dialogue_state()
 
