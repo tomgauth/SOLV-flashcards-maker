@@ -98,15 +98,19 @@ def build_inputs(lines: List[Dict[str, str]], speakers: List[Dict[str, str]]) ->
 
 def convert_dialogue(api_key: str, payload: Dict[str, Any]) -> bytes:
     """
-    Uses the official ElevenLabs text_to_dialogue API
+    Uses the ElevenLabs text_to_dialogue API as documented in the official tutorial.
     """
     client = ElevenLabs(api_key=api_key)
     
-    # Use the official text_to_dialogue API
-    audio: bytes = client.text_to_dialogue.convert(
-        inputs=payload['inputs']
-    )
-    return audio
+    # Extract inputs from payload
+    if 'inputs' in payload and payload['inputs']:
+        # Use the text_to_dialogue API directly
+        audio: bytes = client.text_to_dialogue.convert(
+            inputs=payload['inputs']
+        )
+        return audio
+    else:
+        raise ValueError("No dialogue content provided")
 
 
 # ---------- UI ----------
