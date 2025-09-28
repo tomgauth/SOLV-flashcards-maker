@@ -361,37 +361,13 @@ if st.session_state.enhanced_data:
     else:
         st.dataframe(enhanced_parsed, use_container_width=True)
     
-    # Voice selection interface
-    st.subheader("🎤 Voice Selection")
-    st.write(f"Select voices for each line in **{target_language_choice}**:")
-    
+    # Automatically assign voices in rotation for variety
     if voice_options:
-        # Create columns for voice selection
         for i, row in enumerate(enhanced_parsed):
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.write(f"**Line {i+1}**: {row['B'][:50]}{'...' if len(row['B']) > 50 else ''}")
-            with col2:
-                current_voice_id = st.session_state.voice_selections.get(i, voice_options[0][0] if voice_options else None)
-                current_index = 0
-                if current_voice_id:
-                    try:
-                        current_index = next(j for j, (vid, _) in enumerate(voice_options) if vid == current_voice_id)
-                    except StopIteration:
-                        current_index = 0
-                
-                selected_voice = st.selectbox(
-                    f"Voice {i+1}",
-                    options=[opt[1] for opt in voice_options],
-                    index=current_index,
-                    key=f"voice_select_{i}",
-                    label_visibility="collapsed"
-                )
-                
-                # Update session state when selection changes
-                if selected_voice:
-                    selected_voice_id = next(opt[0] for opt in voice_options if opt[1] == selected_voice)
-                    st.session_state.voice_selections[i] = selected_voice_id
+            # Rotate through available voices
+            voice_index = i % len(voice_options)
+            selected_voice_id = voice_options[voice_index][0]
+            st.session_state.voice_selections[i] = selected_voice_id
     else:
         st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
     
