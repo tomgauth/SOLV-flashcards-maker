@@ -31,7 +31,7 @@ def build_recall_model() -> genanki.Model:
                     <div class="target_ipa">{{TargetIPA}}</div>
                     <div class="notes">{{Notes}}</div>
                     <div class="notes">{{card_type}}</div>
-                    <div class="copyright">SOLVlanguages www.solvlanguages.com</div>
+                    <div class="copyright">©️ SOLV Languages | www.solvlanguages.com</div>
                 """
     )
 
@@ -127,7 +127,7 @@ def build_recognize_model() -> genanki.Model:
                     <div class="target_ipa">{{TargetIPA}}</div>
                     <div class="notes">{{Notes}}</div>
                     <div class="notes">{{card_type}}</div>
-                    <div class="copyright">SOLVlanguages www.solvlanguages.com</div>
+                    <div class="copyright">©️ SOLV Languages | www.solvlanguages.com</div>
                 """
     )
 

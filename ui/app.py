@@ -369,11 +369,11 @@ if generate and st.session_state.parsed_data:
     try:
         # Map language label to country flag for sub-deck root
         FLAG_BY_LANG = {
-            "fr": "🇫🇷",
-            "it": "🇮🇹", 
-            "vi": "🇻🇳",
-            "ru": "🇷🇺",
-            "en": "🇺🇸",
+            "French": "🇫🇷",
+            "Italian": "🇮🇹", 
+            "Vietnamese": "🇻🇳",
+            "Russian": "🇷🇺",
+            "English": "🇺🇸",
         }
         flag_root = FLAG_BY_LANG.get(target_language_choice, target_language_choice)
         hierarchical_deck_name = f"{flag_root}::{card_type}::{deck_title}".strip(":")
