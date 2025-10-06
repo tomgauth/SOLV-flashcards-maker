@@ -21,6 +21,7 @@ def build_simple_apkg(
     use_speaker_boost: bool = True,
     speaking_rate: float = 1.0,
     use_preview_voices: bool = False,  # New parameter to use voice_id from each row
+    progress_callback = None,  # Optional callback function for progress updates
 ) -> str:
     print(f"[build_simple_apkg] start | pairs={len(pairs)} | deck='{deck_name}' | card_type={card_type} | tts_language={tts_language}")
     # Choose model by card_type (support 'recognise' and 'recognize')
@@ -78,6 +79,10 @@ def build_simple_apkg(
     for idx, r in enumerate(pairs):
         user_language = r.get("A", "")
         target_language = r.get("B", "")
+        
+        # Update progress callback if provided
+        if progress_callback:
+            progress_callback(idx, len(pairs), target_language)
 
         # Synthesize target text with failover across voices
         audio_info = {"filename": "", "path": ""}
@@ -125,7 +130,7 @@ def build_simple_apkg(
             target_audio_field,     # TargetAudio (filename like [sound:...])
             target_language,        # TargetLanguage
             "",                    # TargetIPA
-            "",                    # Notes
+            r.get("Notes", ""),     # Notes (from third column if provided)
             card_type,              # card_type (e.g., 'recall' or 'recognise')
         ]
         note = genanki.Note(model=model, fields=fields)
@@ -137,6 +142,11 @@ def build_simple_apkg(
     out_path = os.path.join(tempfile.gettempdir(), f"deck_{deck_id}.apkg")
     print(f"[build_simple_apkg] writing package | media_files={len(media_files)} | out={out_path}")
     pkg.write_to_file(out_path)
+    
+    # Final progress update
+    if progress_callback:
+        progress_callback(len(pairs), len(pairs), "")
+    
     print(f"[build_simple_apkg] done")
     return out_path
 

@@ -86,7 +86,7 @@ def analyze_phrase_set(phrases: list) -> dict:
         "difficulty_distribution": difficulty_counts
     }
 
-st.write("Paste two-column TSV: left = A (UserLanguage), right = B (TargetLanguage)")
+st.write("Paste TSV data: Column 1 = A (UserLanguage), Column 2 = B (TargetLanguage), Column 3 = Notes (optional)")
 
 # Initialize session state
 if 'parsed_data' not in st.session_state:
@@ -102,7 +102,7 @@ if 'voice_selections' not in st.session_state:
 
 # Show input form only if we haven't parsed data yet
 if st.session_state.show_input:
-    tsv_text = st.text_area("1️⃣ Paste the phrases in TSV format (A\tB) here", height=220)
+    tsv_text = st.text_area("1️⃣ Paste the phrases in TSV format (A\tB\tNotes) here", height=220, help="Tab-separated values: Column 1 = User Language, Column 2 = Target Language, Column 3 = Notes (optional)")
 else:
     st.info("📋 Data has been parsed. Use the buttons below to modify or regenerate.")
     if st.button("🔄 Edit Input Data"):
@@ -122,7 +122,7 @@ with colA:
 with colB:
     user_col_choice = st.selectbox("UserLanguage column", ["1 (left)", "2 (right)"], index=1)
 with colLang:
-    target_language_choice = st.selectbox("Target language label", ["French", "Italian", "Vietnamese", "Russian", "English"], index=0)
+    target_language_choice = st.selectbox("Target language label", ["French", "Italian", "Vietnamese", "Russian", "Chinese", "English"], index=0)
 
 # Additional generator settings: Stability + Deck title (with today as default)
 gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05, help="Voice stability (1.0 = most stable)")
@@ -171,6 +171,7 @@ if preview and st.session_state.show_input and 'tsv_text' in locals() and tsv_te
                     enhanced_row = {
                         "A": row["A"],
                         "B": row["B"], 
+                        "Notes": row.get("Notes", ""),
                         "Zipf Score": zipf_analysis["zipf_score"],
                         "Difficulty": zipf_analysis["difficulty_band"],
                         "Words": zipf_analysis["word_count"]
@@ -189,7 +190,7 @@ if preview and st.session_state.show_input and 'tsv_text' in locals() and tsv_te
                 st.session_state.warning_rows = warning_rows
             else:
                 # Non-French or no analysis needed
-                enhanced_parsed = [{"A": r["A"], "B": r["B"]} for r in transformed]
+                enhanced_parsed = [{"A": r["A"], "B": r["B"], "Notes": r.get("Notes", "")} for r in transformed]
                 st.session_state.enhanced_data = enhanced_parsed
                 st.session_state.warning_rows = []
             
@@ -246,6 +247,8 @@ if st.session_state.enhanced_data:
             lang_code = "PT"
         elif any(indicator in name_lower for indicator in ['russian', 'русский']):
             lang_code = "RU"
+        elif any(indicator in name_lower for indicator in ['chinese', '中文']):
+            lang_code = "ZH"
         
         # Extract accent information
         if any(acc in name_lower for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
@@ -303,6 +306,7 @@ if st.session_state.enhanced_data:
                     fixed_parsed.append({
                         "A": english_phrase,
                         "B": row["B"],
+                        "Notes": row.get("Notes", ""),
                         "row": row["row"]
                     })
                 else:
@@ -323,6 +327,7 @@ if st.session_state.enhanced_data:
                 enhanced_row = {
                     "A": row["A"],
                     "B": row["B"], 
+                    "Notes": row.get("Notes", ""),
                     "Zipf Score": zipf_analysis["zipf_score"],
                     "Difficulty": zipf_analysis["difficulty_band"],
                     "Words": zipf_analysis["word_count"]
@@ -370,13 +375,15 @@ if generate and st.session_state.parsed_data:
         # Map language label to country flag for sub-deck root
         FLAG_BY_LANG = {
             "French": "🇫🇷",
-            "Italian": "🇮🇹", 
+            "Italian": "🇮🇹",
             "Vietnamese": "🇻🇳",
             "Russian": "🇷🇺",
+            "Chinese": "🇨🇳",
             "English": "🇺🇸",
         }
         flag_root = FLAG_BY_LANG.get(target_language_choice, target_language_choice)
         hierarchical_deck_name = f"{flag_root}::{card_type}::{deck_title}".strip(":")
+        
         # Add voice selections to parsed data
         parsed_with_voices = []
         for i, row in enumerate(st.session_state.parsed_data):
@@ -384,6 +391,20 @@ if generate and st.session_state.parsed_data:
             row_with_voice["voice_id"] = st.session_state.voice_selections.get(i)
             parsed_with_voices.append(row_with_voice)
         
+        # Initialize progress tracking
+        total_cards = len(parsed_with_voices)
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        status_text.text(f"🎯 Initializing flashcard generation... (0/{total_cards})")
+        
+        # Create a callback function to update progress
+        def update_progress(current_card: int, total_cards: int, current_text: str = ""):
+            progress = current_card / total_cards
+            progress_bar.progress(progress)
+            if current_card < total_cards:
+                status_text.text(f"🎙️ Generating audio for card {current_card + 1}/{total_cards}: {current_text[:40]}...")
+            else:
+                status_text.text(f"📦 Finalizing .apkg file... ({total_cards}/{total_cards})")
         
         out_path = build_simple_apkg(
             parsed_with_voices,
@@ -393,7 +414,12 @@ if generate and st.session_state.parsed_data:
             stability=gen_stability,
             speaking_rate=1.0,  # Use default natural speed
             use_preview_voices=True,  # Use the voice assignments from the preview table
+            progress_callback=update_progress,  # Pass the progress callback
         )
+        
+        # Complete the progress bar
+        progress_bar.progress(1.0)
+        status_text.text(f"✅ Successfully generated {total_cards} flashcards!")
 
         # Show success banner
         st.success("🎉 Deck generated successfully!")
@@ -546,6 +572,8 @@ with col_voice:
                 lang_code = "PT"
             elif any(indicator in name_lower for indicator in ['russian', 'русский']):
                 lang_code = "RU"
+            elif any(indicator in name_lower for indicator in ['chinese', '中文']):
+                lang_code = "ZH"
             
             # Extract accent information
             if any(acc in name_lower for acc in ['american', 'british', 'parisian', 'standard', 'canadian', 'australian']):
@@ -588,15 +616,15 @@ if generate_btn:
     else:
         try:
             with st.spinner("Generating audio..."):
-                out = synthesize_text(
-                    tts_text,
+            out = synthesize_text(
+                tts_text,
                     selected_voice_id,
-                    out_dir=os.path.join(tempfile.gettempdir(), "eleven_media"),
-                    stability=1.0,
-                    similarity_boost=0.7,
-                    style=0.0,
+                out_dir=os.path.join(tempfile.gettempdir(), "eleven_media"),
+                stability=1.0,
+                similarity_boost=0.7,
+                style=0.0,
                     speaking_rate=1.0,  # Use default natural speed
-                )
+            )
                 
             with open(out["path"], "rb") as f:
                 audio_bytes = f.read()

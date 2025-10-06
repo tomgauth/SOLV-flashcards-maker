@@ -26,9 +26,11 @@ def parse_two_column_tsv(text: str) -> List[Dict[str, str]]:
             continue
         parts = line.split("\t")
         if len(parts) < 2:
-            raise ValueError(f"Line {i}: expected 2 columns separated by a tab.")
+            raise ValueError(f"Line {i}: expected at least 2 columns separated by a tab.")
         a = parts[0].strip()
         b = parts[1].strip()
-        rows.append({"A": a, "B": b, "row": str(i)})
+        # Handle optional third column as notes
+        notes = parts[2].strip() if len(parts) > 2 else ""
+        rows.append({"A": a, "B": b, "Notes": notes, "row": str(i)})
     return rows
 
