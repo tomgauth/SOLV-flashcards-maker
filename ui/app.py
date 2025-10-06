@@ -616,15 +616,15 @@ if generate_btn:
     else:
         try:
             with st.spinner("Generating audio..."):
-            out = synthesize_text(
-                tts_text,
+                out = synthesize_text(
+                    tts_text,
                     selected_voice_id,
-                out_dir=os.path.join(tempfile.gettempdir(), "eleven_media"),
-                stability=1.0,
-                similarity_boost=0.7,
-                style=0.0,
+                    out_dir=os.path.join(tempfile.gettempdir(), "eleven_media"),
+                    stability=1.0,
+                    similarity_boost=0.7,
+                    style=0.0,
                     speaking_rate=1.0,  # Use default natural speed
-            )
+                )
                 
             with open(out["path"], "rb") as f:
                 audio_bytes = f.read()
