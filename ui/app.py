@@ -150,8 +150,8 @@ if preview and st.session_state.show_input and 'tsv_text' in locals() and tsv_te
             if user_index == 0 and target_index == 1:
                 transformed = parsed  # already A=user, B=target
             else:
-                # swap A and B
-                transformed = [{"A": r["B"], "B": r["A"], "row": r["row"]} for r in parsed]
+                # swap A and B, but preserve Notes
+                transformed = [{"A": r["B"], "B": r["A"], "Notes": r.get("Notes", ""), "row": r["row"]} for r in parsed]
             
             # Store in session state and hide input
             st.session_state.parsed_data = transformed
