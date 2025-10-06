@@ -26,6 +26,8 @@ def build_recall_model() -> genanki.Model:
 
     back_template = (
         """
+                    <div class="user_language">{{UserLanguage}}</div>
+                    <div style="margin-bottom: 20px;"></div>
                     <div class="target_audio">{{TargetAudio}}</div>
                     <div class="target_language">{{TargetLanguage}}</div>
                     <div class="target_ipa">{{TargetIPA}}</div>
@@ -104,6 +106,7 @@ def build_recall_model() -> genanki.Model:
 
 
 def build_recognize_model() -> genanki.Model:
+
     """Return the 'recognize' genanki Model with specified fields/templates/CSS."""
     fields = [
         {"name": "UserLanguage"},
@@ -121,7 +124,9 @@ def build_recognize_model() -> genanki.Model:
     )
 
     back_template = (
-        """
+        """ 
+                    <div class="target_audio">{{TargetAudio}}</div>
+                    <div style="margin-bottom: 20px;"></div>
                     <div class="target_language">{{TargetLanguage}}</div>
                     <div class="user_language">{{UserLanguage}}</div>
                     <div class="target_ipa">{{TargetIPA}}</div>
