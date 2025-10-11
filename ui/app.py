@@ -124,8 +124,12 @@ with colB:
 with colLang:
     target_language_choice = st.selectbox("Target language label", ["French", "Italian", "Vietnamese", "Russian", "Chinese", "English"], index=0)
 
-# Additional generator settings: Stability + Deck title (with today as default)
-gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05, help="Voice stability (1.0 = most stable)")
+# Additional generator settings: Stability + Speed + Deck title (with today as default)
+col_stability, col_speed = st.columns(2)
+with col_stability:
+    gen_stability = st.slider("Stability (deck)", 0.0, 1.0, 1.0, 0.05, help="Voice stability (1.0 = most stable)")
+with col_speed:
+    gen_speed = st.slider("Audio Speed", 0.5, 2.0, 1.0, 0.1, help="Audio playback speed (1.0 = normal speed)")
 
 default_deck_title = date.today().isoformat()
 deck_title = st.text_input("3️⃣ Name your deck", value=default_deck_title, help="Final deck name (suffix)")
@@ -412,7 +416,7 @@ if generate and st.session_state.parsed_data:
             card_type=card_type.lower(),
             tts_language=target_language_choice,
             stability=gen_stability,
-            speaking_rate=1.0,  # Use default natural speed
+            speaking_rate=gen_speed,  # Use the selected speed
             use_preview_voices=True,  # Use the voice assignments from the preview table
             progress_callback=update_progress,  # Pass the progress callback
         )
@@ -514,11 +518,20 @@ if analyze_btn and analyzer_text.strip():
 st.markdown("---")
 st.subheader("🎤 Text-to-Speech Generator")
 
-@st.cache_data(show_spinner=False)
+# Check if API key is configured
+import os
+api_key = os.environ.get("ELEVENLABS_API_KEY")
+if not api_key:
+    st.error("⚠️ ElevenLabs API key not found. Please set the ELEVENLABS_API_KEY environment variable.")
+    st.info("You can set it by running: `export ELEVENLABS_API_KEY=your_api_key_here`")
+    st.stop()
+
+@st.cache_data(show_spinner=False, ttl=60)  # Cache for 60 seconds to allow for updates
 def _get_groups():
     try:
         return group_voices_by_language()
-    except Exception:
+    except Exception as e:
+        st.error(f"Failed to load voices: {e}")
         return {}
 
 # Get available voices grouped by language
@@ -527,8 +540,8 @@ groups = _get_groups()
 # Input text
 tts_text = st.text_input("📝 Text to convert to speech", value="bonjour", help="Enter text to convert to speech")
 
-# Language and voice selection
-col_lang, col_voice = st.columns([1, 2])
+# Language, voice, and speed selection
+col_lang, col_voice, col_speed = st.columns([1, 2, 1])
 
 with col_lang:
     # Get available languages (sorted, with French first if available)
@@ -538,6 +551,9 @@ with col_lang:
         available_langs.insert(0, available_langs.pop(french_index))
     
     selected_language = st.selectbox("🌍 Language", available_langs, index=0)
+
+with col_speed:
+    tts_speed = st.slider("🎵 Speed", 0.5, 2.0, 1.0, 0.1, help="Audio playback speed (1.0 = normal speed)")
 
 with col_voice:
     # Get voices for selected language
@@ -604,8 +620,22 @@ with col_voice:
         st.write("No voices found for this language")
         selected_voice_id = None
 
-# Generate button
-generate_btn = st.button("🔊 Generate Audio", type="primary")
+# Generate and cache clear buttons
+col_generate, col_clear = st.columns([3, 1])
+with col_generate:
+    generate_btn = st.button("🔊 Generate Audio", type="primary")
+with col_clear:
+    clear_cache_btn = st.button("🗑️ Clear Cache", help="Clear cached audio files to force regeneration")
+
+# Handle cache clearing
+if clear_cache_btn:
+    import shutil
+    cache_dir = os.path.join(tempfile.gettempdir(), "eleven_media")
+    if os.path.exists(cache_dir):
+        shutil.rmtree(cache_dir)
+        st.success("✅ Cache cleared! Next generation will use fresh audio.")
+    else:
+        st.info("ℹ️ No cache to clear.")
 
 # Audio generation and playback
 if generate_btn:
@@ -623,7 +653,7 @@ if generate_btn:
                     stability=1.0,
                     similarity_boost=0.7,
                     style=0.0,
-                    speaking_rate=1.0,  # Use default natural speed
+                    speaking_rate=tts_speed,  # Use the selected speed
                 )
                 
             with open(out["path"], "rb") as f:

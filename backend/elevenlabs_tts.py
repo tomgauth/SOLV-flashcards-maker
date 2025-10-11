@@ -2,11 +2,7 @@ import hashlib
 import os
 from typing import Dict, List, Tuple
 
-try:
-    from pydub import AudioSegment
-    _HAS_PYDUB = True
-except Exception:
-    _HAS_PYDUB = False
+# pydub no longer needed - using ElevenLabs built-in speed control
 
 from elevenlabs.client import ElevenLabs
 from elevenlabs import VoiceSettings
@@ -234,8 +230,8 @@ def group_voices_by_language() -> Dict[str, List[Tuple[str, str]]]:
     return groups
 
 
-def _hash(text: str, voice_id: str, model_id: str, speaking_rate: float) -> str:
-    base = f"{text}\u241f{voice_id}\u241f{model_id}\u241f{speaking_rate}"
+def _hash(text: str, voice_id: str, model_id: str, speaking_rate: float, stability: float, similarity_boost: float, style: float, use_speaker_boost: bool, output_format: str) -> str:
+    base = f"{text}\u241f{voice_id}\u241f{model_id}\u241f{speaking_rate}\u241f{stability}\u241f{similarity_boost}\u241f{style}\u241f{use_speaker_boost}\u241f{output_format}"
     return hashlib.md5(base.encode("utf-8")).hexdigest()[:12]
 
 
@@ -254,12 +250,20 @@ def synthesize_text(
 ) -> Dict[str, str]:
     """Synthesize one text using ElevenLabs SDK and save as MP3."""
     os.makedirs(out_dir, exist_ok=True)
-    base = _hash(text, voice_id, model_id, speaking_rate)
+    # Clamp speed to ElevenLabs supported range for consistent caching
+    clamped_speed = max(0.7, min(1.2, speaking_rate))
+    base = _hash(text, voice_id, model_id, clamped_speed, stability, similarity_boost, style, use_speaker_boost, output_format)
     fname = f"{base}.mp3"
     fpath = os.path.join(out_dir, fname)
 
-    if not os.path.exists(fpath) or speaking_rate != 1.0:
+    if not os.path.exists(fpath):
         client = _client()
+        
+        # Use ElevenLabs built-in speed control (range: 0.7-1.2)
+        if clamped_speed != speaking_rate:
+            print(f"Speed {speaking_rate} clamped to {clamped_speed} (ElevenLabs range: 0.7-1.2)")
+        
+        print(f"Generating TTS with speed={clamped_speed}")
         stream = client.text_to_speech.convert(
             voice_id=voice_id,
             optimize_streaming_latency="0",
@@ -271,25 +275,17 @@ def synthesize_text(
                 similarity_boost=similarity_boost,
                 style=style,
                 use_speaker_boost=use_speaker_boost,
+                speed=clamped_speed,  # Use ElevenLabs built-in speed control
             ),
         )
+        
         tmp_path = fpath + ".tmp"
         with open(tmp_path, "wb") as f:
             for chunk in stream:
                 if isinstance(chunk, (bytes, bytearray)):
                     f.write(chunk)
 
-        if speaking_rate != 1.0 and _HAS_PYDUB:
-            try:
-                audio = AudioSegment.from_file(tmp_path)
-                new_rate = int(audio.frame_rate * speaking_rate)
-                sped = audio._spawn(audio.raw_data, overrides={"frame_rate": new_rate}).set_frame_rate(audio.frame_rate)
-                sped.export(fpath, format="mp3")
-                os.remove(tmp_path)
-            except Exception:
-                os.replace(tmp_path, fpath)
-        else:
-            os.replace(tmp_path, fpath)
+        os.replace(tmp_path, fpath)
 
     return {"filename": fname, "path": fpath}
 
