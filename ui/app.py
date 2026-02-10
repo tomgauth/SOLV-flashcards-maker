@@ -15,8 +15,18 @@ from backend.simple_flashcards import build_simple_apkg
 from backend.elevenlabs_tts import list_voices, group_voices_by_language, voices_for_language_strict, synthesize_text, ElevenLabsError
 from backend.sentence_analyzer import analyze_sentence, fr_tokens, band_from_zipf
 from backend.formality_checker import check_formality_pronouns, add_formality_markers
-from wordfreq import zipf_frequency
 from statistics import mean
+
+# Optional dependency: wordfreq.
+# If it's missing in the deployment environment, we degrade gracefully instead of crashing.
+try:
+    from wordfreq import zipf_frequency  # type: ignore
+    WORD_FREQ_AVAILABLE = True
+except Exception:
+    WORD_FREQ_AVAILABLE = False
+
+    def zipf_frequency(*args, **kwargs) -> float:
+        return 0.0
 
 st.set_page_config(page_title="Flashcards Creator", page_icon="🃏", layout="centered")
 
@@ -24,6 +34,8 @@ st.title("Flashcards Creator")
 
 def get_sentence_zipf_score(text: str) -> dict:
     """Get Zipf analysis for a French sentence."""
+    if not WORD_FREQ_AVAILABLE:
+        return {"zipf_score": 0.0, "difficulty_band": "Unavailable (wordfreq not installed)", "word_count": len(text.split())}
     if not text.strip():
         return {"zipf_score": 0.0, "difficulty_band": "Unknown", "word_count": 0}
     
@@ -53,6 +65,8 @@ def get_sentence_zipf_score(text: str) -> dict:
 
 def analyze_phrase_set(phrases: list) -> dict:
     """Analyze the entire set of phrases for word overlap and difficulty distribution."""
+    if not WORD_FREQ_AVAILABLE:
+        return {"total_words": sum(len(p.split()) for p in phrases), "unique_words": 0, "overlap_ratio": 0.0, "difficulty_distribution": {}}
     if not phrases:
         return {"total_words": 0, "unique_words": 0, "overlap_ratio": 0.0, "difficulty_distribution": {}}
     

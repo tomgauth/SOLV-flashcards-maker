@@ -1,7 +1,20 @@
 # pip install wordfreq
 import re
 from statistics import mean, median
-from wordfreq import zipf_frequency
+
+# Try to import wordfreq; fall back gracefully if unavailable (e.g. missing pkg_resources)
+try:
+    from wordfreq import zipf_frequency  # type: ignore
+    WORD_FREQ_AVAILABLE = True
+except Exception:
+    WORD_FREQ_AVAILABLE = False
+
+    def zipf_frequency(*args, **kwargs) -> float:
+        """
+        Fallback Zipf function used when wordfreq is not installed or broken.
+        Always returns 0.0 so the rest of the app can still run.
+        """
+        return 0.0
 
 # --- Simple FR tokenizer that keeps apostrophes inside words ---
 WORD_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]+(?:'[A-Za-zÀ-ÖØ-öø-ÿ]+)?", flags=re.UNICODE)
