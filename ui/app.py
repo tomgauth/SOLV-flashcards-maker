@@ -237,16 +237,34 @@ if st.session_state.enhanced_data:
     warning_rows = st.session_state.warning_rows
     parsed = st.session_state.parsed_data
     
-    # Get available voices for the target language (cached per API key)
+    # Get available voices grouped by language (cached per API key)
     @st.cache_data(show_spinner=False, ttl=300)
-    def _get_voices_for_language(language, api_key):
-        try:
-            groups = group_voices_by_language(api_key)
-            return groups.get(language, [])
-        except Exception:
-            return []
+    def _get_voice_groups(api_key):
+        return group_voices_by_language(api_key)
 
-    available_voices = _get_voices_for_language(target_language_choice, elevenlabs_api_key) if elevenlabs_api_key else []
+    available_voices = []
+    voices_fetch_error = None
+    if elevenlabs_api_key:
+        try:
+            voice_groups = _get_voice_groups(elevenlabs_api_key)
+            available_voices = voice_groups.get(target_language_choice, [])
+            if not available_voices:
+                # The multilingual TTS model can speak any language with any voice,
+                # so offer every voice on the account rather than blocking the user.
+                seen_ids = set()
+                for vs in voice_groups.values():
+                    for vid, vname in vs:
+                        if vid not in seen_ids:
+                            seen_ids.add(vid)
+                            available_voices.append((vid, vname))
+                if available_voices:
+                    st.info(
+                        f"ℹ️ None of your ElevenLabs voices are labeled as {target_language_choice}, "
+                        f"so all {len(available_voices)} voices from your account are offered instead. "
+                        f"The multilingual model can speak {target_language_choice} with any voice."
+                    )
+        except Exception as e:
+            voices_fetch_error = str(e)
     
     # Create voice options for dropdown
     voice_options = []
@@ -314,8 +332,10 @@ if st.session_state.enhanced_data:
             row["Voice"] = selected_voice_name
     elif not elevenlabs_api_key:
         st.warning("Enter your ElevenLabs API key at the top of the page to assign voices.")
+    elif voices_fetch_error:
+        st.error(f"Could not load voices from ElevenLabs: {voices_fetch_error}")
     else:
-        st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
+        st.error("No voices found on your ElevenLabs account. Add voices in 'My Voices' on elevenlabs.io, or check your API key.")
     
     # Show warning if any formal/informal pronouns found
     if warning_rows:

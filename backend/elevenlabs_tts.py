@@ -22,6 +22,59 @@ class ElevenLabsError(RuntimeError):
     pass
 
 
+# Language code to full name mapping (used to group and match voices)
+LANG_CODE_TO_NAME: Dict[str, str] = {
+    "fr": "French",
+    "en": "English",
+    "it": "Italian",
+    "vi": "Vietnamese",
+    "tr": "Turkish",
+    "es": "Spanish",
+    "de": "German",
+    "pt": "Portuguese",
+    "ru": "Russian",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "zh": "Chinese",
+    "ar": "Arabic",
+    "hi": "Hindi",
+    "nl": "Dutch",
+    "sv": "Swedish",
+    "no": "Norwegian",
+    "da": "Danish",
+    "fi": "Finnish",
+    "pl": "Polish",
+    "cs": "Czech",
+    "hu": "Hungarian",
+    "ro": "Romanian",
+    "bg": "Bulgarian",
+    "hr": "Croatian",
+    "sk": "Slovak",
+    "sl": "Slovenian",
+    "et": "Estonian",
+    "lv": "Latvian",
+    "lt": "Lithuanian",
+    "el": "Greek",
+    "he": "Hebrew",
+    "th": "Thai",
+    "uk": "Ukrainian",
+    "ca": "Catalan",
+    "eu": "Basque",
+    "ga": "Irish",
+    "cy": "Welsh",
+    "mt": "Maltese",
+    "is": "Icelandic",
+    "mk": "Macedonian",
+    "sq": "Albanian",
+    "sr": "Serbian",
+    "bs": "Bosnian",
+    "me": "Montenegrin",
+}
+
+# Reverse mapping: full language name (lowercase) -> 2-letter code
+NAME_TO_LANG_CODE: Dict[str, str] = {name.lower(): code for code, name in LANG_CODE_TO_NAME.items()}
+
+
 def _client(api_key: str | None) -> ElevenLabs:
     key = (api_key or "").strip()
     if not key:
@@ -36,10 +89,22 @@ def list_voices(api_key: str | None) -> List[Dict]:
     # SDK returns a dataclass-like object; normalize to dicts
     voices = []
     for v in getattr(resp, "voices", []) or []:
+        # Language codes verified by ElevenLabs (most reliable source, when present).
+        # Entries look like {language: 'fr', locale: 'fr-FR', accent: ...}.
+        languages = set()
+        for vl in getattr(v, "verified_languages", None) or []:
+            code = str(getattr(vl, "language", "") or "").strip().lower()
+            if code:
+                languages.add(code.split("-")[0])
+        fine_tuning = getattr(v, "fine_tuning", None)
+        ft_lang = str(getattr(fine_tuning, "language", "") or "").strip().lower() if fine_tuning else ""
+        if ft_lang:
+            languages.add(ft_lang.split("-")[0])
         voices.append({
             "voice_id": getattr(v, "voice_id", ""),
             "name": getattr(v, "name", ""),
             "labels": getattr(v, "labels", {}) or {},
+            "languages": sorted(languages),
         })
     return voices
 
@@ -64,19 +129,25 @@ def voices_for_language(language_hint: str, api_key: str | None) -> List[Tuple[s
 
 
 def voices_for_language_strict(language_label: str, api_key: str | None) -> List[Tuple[str, str]]:
-    """Return voices whose labels['language'] matches language_label (case-insensitive).
+    """Return voices matching language_label (case-insensitive).
 
-    Falls back to matching any label value containing language_label if 'language' is absent.
+    Checks the voice's verified language codes first, then labels['language'],
+    then any label value containing language_label.
     Does NOT fall back to all voices.
     """
     label = (language_label or "").strip().lower()
+    label_code = NAME_TO_LANG_CODE.get(label)
     matches: List[Tuple[str, str]] = []
     for v in list_voices(api_key):
         name = v.get("name", "")
+        # Verified language codes from the API (e.g. ['en', 'fr'])
+        if label_code and label_code in (v.get("languages") or []):
+            matches.append((v.get("voice_id", ""), name))
+            continue
         labels = v.get("labels", {}) or {}
         lang = str(labels.get("language", "")).strip().lower()
         if lang:
-            if lang == label:
+            if lang == label or lang == label_code:
                 matches.append((v.get("voice_id", ""), name))
             continue
         # If exact 'language' label missing, try any label value contains
@@ -86,105 +157,42 @@ def voices_for_language_strict(language_label: str, api_key: str | None) -> List
 
 
 def group_voices_by_language(api_key: str | None) -> Dict[str, List[Tuple[str, str]]]:
-    """Group voices by 2-letter language code extracted from labels; 'Unknown' otherwise."""
+    """Group voices by language.
+
+    Detection order, per voice:
+    1. verified language codes returned by the ElevenLabs API,
+    2. a 2-letter language code found in the voice labels,
+    3. language words in the voice name.
+    A multilingual voice appears in every language group it supports;
+    voices with no detectable language go under 'Unknown'.
+    """
     import re
     groups: Dict[str, List[Tuple[str, str]]] = {}
-    
-    # Language code to full name mapping
-    lang_code_to_name = {
-        "fr": "French",
-        "en": "English", 
-        "it": "Italian",
-        "vi": "Vietnamese",
-        "tr": "Turkish",
-        "es": "Spanish",
-        "de": "German",
-        "pt": "Portuguese",
-        "ru": "Russian",
-        "ja": "Japanese",
-        "ko": "Korean",
-        "zh": "Chinese",
-        "ar": "Arabic",
-        "hi": "Hindi",
-        "nl": "Dutch",
-        "sv": "Swedish",
-        "no": "Norwegian",
-        "da": "Danish",
-        "fi": "Finnish",
-        "pl": "Polish",
-        "cs": "Czech",
-        "hu": "Hungarian",
-        "ro": "Romanian",
-        "bg": "Bulgarian",
-        "hr": "Croatian",
-        "sk": "Slovak",
-        "sl": "Slovenian",
-        "et": "Estonian",
-        "lv": "Latvian",
-        "lt": "Lithuanian",
-        "el": "Greek",
-        "he": "Hebrew",
-        "th": "Thai",
-        "uk": "Ukrainian",
-        "ca": "Catalan",
-        "eu": "Basque",
-        "ga": "Irish",
-        "cy": "Welsh",
-        "mt": "Maltese",
-        "is": "Icelandic",
-        "mk": "Macedonian",
-        "sq": "Albanian",
-        "sr": "Serbian",
-        "bs": "Bosnian",
-        "me": "Montenegrin",
-        "mk": "Macedonian",
-        "sl": "Slovenian",
-        "sk": "Slovak",
-        "cs": "Czech",
-        "hu": "Hungarian",
-        "ro": "Romanian",
-        "bg": "Bulgarian",
-        "hr": "Croatian",
-        "et": "Estonian",
-        "lv": "Latvian",
-        "lt": "Lithuanian",
-        "el": "Greek",
-        "he": "Hebrew",
-        "th": "Thai",
-        "uk": "Ukrainian",
-        "ca": "Catalan",
-        "eu": "Basque",
-        "ga": "Irish",
-        "cy": "Welsh",
-        "mt": "Maltese",
-        "is": "Icelandic",
-        "mk": "Macedonian",
-        "sq": "Albanian",
-        "sr": "Serbian",
-        "bs": "Bosnian",
-        "me": "Montenegrin"
-    }
-    
+
     for v in list_voices(api_key):
         labels = v.get("labels", {}) or {}
         voice_id = v.get("voice_id", "")
         name = v.get("name", "")
-        
-        # Look for 2-letter language code in labels
+
+        # 1) Verified language codes from the API (a voice can support several)
+        lang_codes = {c for c in (v.get("languages") or []) if c in LANG_CODE_TO_NAME}
+
+        # 2) Look for 2-letter language code in labels
         lang_code = None
-        for key, value in labels.items():
-            # Convert to string and look for 2-letter code pattern
-            value_str = str(value).lower()
-            # Match 2-letter language code with spaces before and after
-            match = re.search(r'\b([a-z]{2})\b', value_str)
-            if match:
-                potential_code = match.group(1)
-                if potential_code in lang_code_to_name:
-                    lang_code = potential_code
-                    break
-        
-        # If no language code found in labels, try to extract from voice name
-        if not lang_code:
+        if not lang_codes:
+            for key, value in labels.items():
+                # Convert to string and look for 2-letter code pattern
+                value_str = str(value).lower()
+                # Match 2-letter language code with spaces before and after
+                match = re.search(r'\b([a-z]{2})\b', value_str)
+                if match:
+                    potential_code = match.group(1)
+                    if potential_code in LANG_CODE_TO_NAME:
+                        lang_code = potential_code
+                        break
+
+        # 3) If no language code found in labels, try to extract from voice name
+        if not lang_codes and not lang_code:
             name_lower = name.lower()
             # Look for language indicators in the name
             if any(indicator in name_lower for indicator in ['french', 'français']):
@@ -215,15 +223,16 @@ def group_voices_by_language(api_key: str | None) -> Dict[str, List[Tuple[str, s
                 lang_code = 'ar'
             elif any(indicator in name_lower for indicator in ['hindi', 'हिन्दी']):
                 lang_code = 'hi'
-        
-        # Use the full language name as the key
+
         if lang_code:
-            key = lang_code_to_name.get(lang_code, lang_code.upper())
-        else:
-            key = "Unknown"
-            
-        groups.setdefault(key, []).append((voice_id, name))
-    
+            lang_codes.add(lang_code)
+
+        # Use the full language name(s) as key(s); a multilingual voice
+        # is listed under every language it supports
+        keys = {LANG_CODE_TO_NAME.get(c, c.upper()) for c in lang_codes} or {"Unknown"}
+        for key in sorted(keys):
+            groups.setdefault(key, []).append((voice_id, name))
+
     return groups
 
 
