@@ -22,6 +22,7 @@ def build_simple_apkg(
     speaking_rate: float = 1.0,
     use_preview_voices: bool = False,  # New parameter to use voice_id from each row
     progress_callback = None,  # Optional callback function for progress updates
+    api_key: str | None = None,  # ElevenLabs API key (user-provided)
 ) -> str:
     print(f"[build_simple_apkg] start | pairs={len(pairs)} | deck='{deck_name}' | card_type={card_type} | tts_language={tts_language}")
     # Choose model by card_type (support 'recognise' and 'recognize')
@@ -46,21 +47,21 @@ def build_simple_apkg(
         # If language has an explicit whitelist, enforce it strictly
         if tts_language in VOICE_WHITELIST_PREFIXES:
             prefixes = VOICE_WHITELIST_PREFIXES[tts_language]
-            all_vs = list_voices()
+            all_vs = list_voices(api_key)
             allowed = [v.get("voice_id", "") for v in all_vs if any(v.get("voice_id", "").startswith(p) for p in prefixes)]
             resolved_voice_ids = [vid for vid in allowed if vid]
             print(f"[build_simple_apkg] whitelist applied for '{tts_language}': {resolved_voice_ids}")
         else:
-            strict = voices_for_language_strict(tts_language)
+            strict = voices_for_language_strict(tts_language, api_key)
             if strict:
                 resolved_voice_ids = [vid for vid, _ in strict]
             else:
                 # fallback to any available voices
-                resolved_voice_ids = [v.get("voice_id", "") for v in list_voices()]
+                resolved_voice_ids = [v.get("voice_id", "") for v in list_voices(api_key)]
 
         # Filter out "famous" voices (not permitted) based on labels when available
         try:
-            all_vs = list_voices()
+            all_vs = list_voices(api_key)
             famous_ids = {v.get("voice_id", "") for v in all_vs if str((v.get("labels") or {}).get("category", "")).lower() == "famous"}
             if famous_ids:
                 before = len(resolved_voice_ids)
@@ -112,6 +113,7 @@ def build_simple_apkg(
                         style=style,
                         use_speaker_boost=use_speaker_boost,
                         speaking_rate=speaking_rate,
+                        api_key=api_key,
                     )
                     if audio_info.get("path"):
                         media_files.append(audio_info["path"])
