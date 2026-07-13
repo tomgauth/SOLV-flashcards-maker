@@ -18,13 +18,8 @@ except Exception:
 
 # ---------- Helpers ----------
 def get_api_key() -> str | None:
-    # Priority: Streamlit Secrets -> ENV -> user input (sidebar)
-    key = st.secrets.get("ELEVENLABS_API_KEY", None) if hasattr(st, "secrets") else None
-    if not key:
-        key = os.getenv("ELEVENLABS_API_KEY")
-    if not key:
-        key = st.session_state.get("api_key")
-    return key
+    # The user must provide their own ElevenLabs API key (sidebar input)
+    return st.session_state.get("api_key")
 
 
 @st.cache_data(show_spinner=False)
@@ -121,7 +116,7 @@ ensure_dialogue_state()
 
 with st.sidebar:
     st.header("🔑 API Key")
-    st.text("Key priority: Secrets → ENV → Below")
+    st.text("Enter your own ElevenLabs API key")
     api_key_input = st.text_input("ELEVENLABS_API_KEY", type="password", placeholder="sk-…")
     if api_key_input:
         st.session_state.api_key = api_key_input
@@ -208,7 +203,7 @@ with colB:
     lines = st.data_editor(
         st.session_state.lines,
         column_config=cfg,
-        use_container_width=True,
+        width="stretch",
         num_rows="dynamic",
         key="lines_editor",
     )
@@ -223,7 +218,7 @@ with colB:
             {"speaker": speaker_names[1] if len(speaker_names) > 1 else "B", "text": "Vâng, mưa ở đây đẹp. [curious] Anh làm nghề gì ạ?"},
             {"speaker": speaker_names[0] if speaker_names else "A", "text": "Mình làm online. [friendly] Cảm ơn!"},
         ]
-        st.experimental_rerun()
+        st.rerun()
 
 st.markdown("### 3) Model & advanced")
 adv1, adv2, adv3 = st.columns(3)
@@ -261,7 +256,7 @@ st.session_state.settings["apply_text_normalization"] = norm
 st.markdown("---")
 gen_left, gen_right = st.columns([1, 2])
 with gen_left:
-    go = st.button("🎧 Generate Dialogue", type="primary", use_container_width=True)
+    go = st.button("🎧 Generate Dialogue", type="primary", width="stretch")
 with gen_right:
     show_json = st.toggle("Show request JSON")
 

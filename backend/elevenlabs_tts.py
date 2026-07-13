@@ -18,23 +18,20 @@ __all__ = [
 ]
 
 
-ENV_API_KEY = "ELEVENLABS_API_KEY"
-
-
 class ElevenLabsError(RuntimeError):
     pass
 
 
-def _client() -> ElevenLabs:
-    api_key = os.environ.get(ENV_API_KEY)
-    if not api_key:
-        raise ElevenLabsError(f"Missing {ENV_API_KEY} environment variable")
-    return ElevenLabs(api_key=api_key)
+def _client(api_key: str | None) -> ElevenLabs:
+    key = (api_key or "").strip()
+    if not key:
+        raise ElevenLabsError("Missing ElevenLabs API key. Please enter your own API key.")
+    return ElevenLabs(api_key=key)
 
 
-def list_voices() -> List[Dict]:
+def list_voices(api_key: str | None) -> List[Dict]:
     """Return raw list of voices from ElevenLabs SDK (dicts)."""
-    client = _client()
+    client = _client(api_key)
     resp = client.voices.get_all()
     # SDK returns a dataclass-like object; normalize to dicts
     voices = []
@@ -47,8 +44,8 @@ def list_voices() -> List[Dict]:
     return voices
 
 
-def voices_for_language(language_hint: str) -> List[Tuple[str, str]]:
-    voices = list_voices()
+def voices_for_language(language_hint: str, api_key: str | None) -> List[Tuple[str, str]]:
+    voices = list_voices(api_key)
     hint_lower = (language_hint or "").lower()
     results: List[Tuple[str, str]] = []
 
@@ -66,7 +63,7 @@ def voices_for_language(language_hint: str) -> List[Tuple[str, str]]:
     return results
 
 
-def voices_for_language_strict(language_label: str) -> List[Tuple[str, str]]:
+def voices_for_language_strict(language_label: str, api_key: str | None) -> List[Tuple[str, str]]:
     """Return voices whose labels['language'] matches language_label (case-insensitive).
 
     Falls back to matching any label value containing language_label if 'language' is absent.
@@ -74,7 +71,7 @@ def voices_for_language_strict(language_label: str) -> List[Tuple[str, str]]:
     """
     label = (language_label or "").strip().lower()
     matches: List[Tuple[str, str]] = []
-    for v in list_voices():
+    for v in list_voices(api_key):
         name = v.get("name", "")
         labels = v.get("labels", {}) or {}
         lang = str(labels.get("language", "")).strip().lower()
@@ -88,7 +85,7 @@ def voices_for_language_strict(language_label: str) -> List[Tuple[str, str]]:
     return matches
 
 
-def group_voices_by_language() -> Dict[str, List[Tuple[str, str]]]:
+def group_voices_by_language(api_key: str | None) -> Dict[str, List[Tuple[str, str]]]:
     """Group voices by 2-letter language code extracted from labels; 'Unknown' otherwise."""
     import re
     groups: Dict[str, List[Tuple[str, str]]] = {}
@@ -168,7 +165,7 @@ def group_voices_by_language() -> Dict[str, List[Tuple[str, str]]]:
         "me": "Montenegrin"
     }
     
-    for v in list_voices():
+    for v in list_voices(api_key):
         labels = v.get("labels", {}) or {}
         voice_id = v.get("voice_id", "")
         name = v.get("name", "")
@@ -247,6 +244,7 @@ def synthesize_text(
     use_speaker_boost: bool = True,
     speaking_rate: float = 1.0,
     output_format: str = "mp3_22050_32",
+    api_key: str | None = None,
 ) -> Dict[str, str]:
     """Synthesize one text using ElevenLabs SDK and save as MP3."""
     os.makedirs(out_dir, exist_ok=True)
@@ -257,7 +255,7 @@ def synthesize_text(
     fpath = os.path.join(out_dir, fname)
 
     if not os.path.exists(fpath):
-        client = _client()
+        client = _client(api_key)
         
         # Use ElevenLabs built-in speed control (range: 0.7-1.2)
         if clamped_speed != speaking_rate:
@@ -302,6 +300,7 @@ def synthesize_batch(
     use_speaker_boost: bool = True,
     speaking_rate: float = 1.0,
     output_format: str = "mp3_22050_32",
+    api_key: str | None = None,
 ) -> List[Dict[str, str]]:
     results: List[Dict[str, str]] = []
     for t in texts:
@@ -317,6 +316,7 @@ def synthesize_batch(
                 use_speaker_boost=use_speaker_boost,
                 speaking_rate=speaking_rate,
                 output_format=output_format,
+                api_key=api_key,
             )
         )
     return results

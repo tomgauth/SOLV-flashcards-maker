@@ -32,6 +32,16 @@ st.set_page_config(page_title="Flashcards Creator", page_icon="🃏", layout="ce
 
 st.title("Flashcards Creator")
 
+# --- ElevenLabs API key (user-provided, required for all voice generation) ---
+elevenlabs_api_key = st.text_input(
+    "🔑 ElevenLabs API key (required)",
+    type="password",
+    key="elevenlabs_api_key",
+    help="Voice generation uses YOUR ElevenLabs account. Create a key at https://elevenlabs.io/app/settings/api-keys. The key is only kept in memory for this browser session.",
+).strip()
+if not elevenlabs_api_key:
+    st.warning("Enter your ElevenLabs API key above to enable voice previews and deck generation.")
+
 def get_sentence_zipf_score(text: str) -> dict:
     """Get Zipf analysis for a French sentence."""
     if not WORD_FREQ_AVAILABLE:
@@ -227,16 +237,16 @@ if st.session_state.enhanced_data:
     warning_rows = st.session_state.warning_rows
     parsed = st.session_state.parsed_data
     
-    # Get available voices for the target language
-    @st.cache_data(show_spinner=False)
-    def _get_voices_for_language(language):
+    # Get available voices for the target language (cached per API key)
+    @st.cache_data(show_spinner=False, ttl=300)
+    def _get_voices_for_language(language, api_key):
         try:
-            groups = group_voices_by_language()
+            groups = group_voices_by_language(api_key)
             return groups.get(language, [])
         except Exception:
             return []
-    
-    available_voices = _get_voices_for_language(target_language_choice)
+
+    available_voices = _get_voices_for_language(target_language_choice, elevenlabs_api_key) if elevenlabs_api_key else []
     
     # Create voice options for dropdown
     voice_options = []
@@ -302,6 +312,8 @@ if st.session_state.enhanced_data:
             
             # Update the voice display in the row
             row["Voice"] = selected_voice_name
+    elif not elevenlabs_api_key:
+        st.warning("Enter your ElevenLabs API key at the top of the page to assign voices.")
     else:
         st.error(f"No voices available for {target_language_choice}. Check your ElevenLabs API key.")
     
@@ -380,15 +392,17 @@ if st.session_state.enhanced_data:
             return [''] * len(row)
         
         styled_df = df.style.apply(highlight_warnings, axis=1)
-        st.dataframe(styled_df, use_container_width=True)
+        st.dataframe(styled_df, width="stretch")
     else:
-        st.dataframe(enhanced_parsed, use_container_width=True)
+        st.dataframe(enhanced_parsed, width="stretch")
     
     # Generate button - right below the table
     st.markdown("---")
-    generate = st.button("🎯 Generate .apkg", type="primary", disabled=not st.session_state.enhanced_data)
+    generate = st.button("🎯 Generate .apkg", type="primary", disabled=not st.session_state.enhanced_data) or generate
 
-if generate and st.session_state.parsed_data:
+if generate and st.session_state.parsed_data and not elevenlabs_api_key:
+    st.error("Please enter your ElevenLabs API key at the top of the page before generating the deck.")
+elif generate and st.session_state.parsed_data:
     try:
         # Map language label to country flag for sub-deck root
         FLAG_BY_LANG = {
@@ -433,6 +447,7 @@ if generate and st.session_state.parsed_data:
             speaking_rate=gen_speed,  # Use the selected speed
             use_preview_voices=True,  # Use the voice assignments from the preview table
             progress_callback=update_progress,  # Pass the progress callback
+            api_key=elevenlabs_api_key,
         )
         
         # Complete the progress bar
@@ -451,8 +466,11 @@ if generate and st.session_state.parsed_data:
                 mime="application/octet-stream",
                 type="primary"
             )
+    except ElevenLabsError as e:
+        st.error(f"ElevenLabs error: {e}")
     except Exception as e:
-        st.error(f"Failed to generate deck: {e}")
+        st.error("Failed to generate deck — full details below:")
+        st.exception(e)
 
 # --- Sentence Analyzer ---
 st.markdown("---")
@@ -532,24 +550,19 @@ if analyze_btn and analyzer_text.strip():
 st.markdown("---")
 st.subheader("🎤 Text-to-Speech Generator")
 
-# Check if API key is configured
-import os
-api_key = os.environ.get("ELEVENLABS_API_KEY")
-if not api_key:
-    st.error("⚠️ ElevenLabs API key not found. Please set the ELEVENLABS_API_KEY environment variable.")
-    st.info("You can set it by running: `export ELEVENLABS_API_KEY=your_api_key_here`")
-    st.stop()
-
 @st.cache_data(show_spinner=False, ttl=60)  # Cache for 60 seconds to allow for updates
-def _get_groups():
+def _get_groups(api_key):
+    return group_voices_by_language(api_key)
+
+# Get available voices grouped by language (requires the user's API key)
+groups = {}
+if not elevenlabs_api_key:
+    st.info("Enter your ElevenLabs API key at the top of the page to use the TTS generator.")
+else:
     try:
-        return group_voices_by_language()
+        groups = _get_groups(elevenlabs_api_key)
     except Exception as e:
         st.error(f"Failed to load voices: {e}")
-        return {}
-
-# Get available voices grouped by language
-groups = _get_groups()
 
 # Input text
 tts_text = st.text_input("📝 Text to convert to speech", value="bonjour", help="Enter text to convert to speech")
@@ -653,7 +666,9 @@ if clear_cache_btn:
 
 # Audio generation and playback
 if generate_btn:
-    if not selected_voice_id:
+    if not elevenlabs_api_key:
+        st.error("Please enter your ElevenLabs API key at the top of the page.")
+    elif not selected_voice_id:
         st.error("No voice selected. Please choose a language and voice.")
     elif not tts_text.strip():
         st.error("Please enter text to convert to speech.")
@@ -668,6 +683,7 @@ if generate_btn:
                     similarity_boost=0.7,
                     style=0.0,
                     speaking_rate=tts_speed,  # Use the selected speed
+                    api_key=elevenlabs_api_key,
                 )
                 
             with open(out["path"], "rb") as f:
@@ -698,6 +714,8 @@ with st.expander("📋 All Available Voices"):
             st.write(f"**{lang}** ({len(voices)} voices)")
             for voice_id, name in voices:
                 st.write(f"  • {name} ({voice_id[:8]}...)")
+    elif not elevenlabs_api_key:
+        st.info("Enter your ElevenLabs API key to list available voices.")
     else:
         st.error("No voices available. Check your ElevenLabs API key.")
 
