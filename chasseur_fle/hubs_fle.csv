@@ -1,0 +1,26 @@
+pseudo;nom;type;pourquoi;verifie;actif
+jeremyfle;Jérémy Fulep — Enseigner le FLE en ligne;formateur de profs;Le plus proche de ton positionnement : il forme les profs de FLE au numérique et à l'enseignement en ligne. Son audience = exactement ta cible.;pseudo confirmé sur TikTok, à revalider sur IG;oui
+charlene_siffre;Charlène Siffre — L'École des Profs;formateur de profs;Programme "devenir prof indépendant". ~8,9K abonnés, donc audience très ciblée et pas diluée.;oui;oui
+lesnouveauxprofs;Antoine Lenglet — Les Nouveaux Profs;formateur de profs;Formation pour profs qui se lancent à leur compte. Concurrent direct = vivier direct.;oui;oui
+zexpertsfle;Les Zexperts FLE;ressources profs;La référence ressources pédago FLE. Gros volume d'abonnés profs, mais audience plus large (salariés + indés).;oui;oui
+lecafedufle;Corentin — Le Café du FLE;communauté;Communauté de profs de FLE, ton conversationnel, beaucoup d'indépendants.;oui;oui
+flippizz_fle;FLIPPIZZ — ressources et formations FLE;ressources profs;Ressources + formations pour profs de FLE.;oui;oui
+lesfeesdufle;Les Fées du FLE;ressources profs;Duo de profs qui partagent des ressources : audience de praticiennes.;oui;oui
+enseignante_fle;Enseignante FLE;communauté;Compte de prof qui agrège une audience de collègues.;oui;oui
+didierfle;Didier FLE;éditeur;Éditeur de manuels FLE : ses abonnés sont des enseignants, presque par définition.;oui;oui
+languageteacherfamily;Language Teacher Family;communauté;Élargit hors francophonie : profs de langue en général (ta cible "tuteurs" au sens large).;oui;oui
+espaceproffle;EspaceProfFLE;ressources profs;Site de ressources FLE + articles sur Preply/italki : audience de profs en ligne.;à vérifier;oui
+profaccelerator;Prof Accelerator;formateur de profs;Programme "développer son activité de professeur indépendant". Concurrent direct.;à vérifier;oui
+agito.fle;Agito — le FLE en action;communauté;Entraide et co-formation entre profs de FLE et de langue (agi.to).;à vérifier;oui
+# ---------------------------------------------------------------------------
+# COMMENT S'EN SERVIR
+# Une ligne = un compte dont on extraira les ABONNÉS.
+# Mets `non` dans la colonne actif pour désactiver une ligne sans la supprimer.
+# Lance `python3 chasseur_fle.py check` : ça valide les pseudos et affiche
+# le nombre d'abonnés de chacun (donc le volume à extraire).
+#
+# RÈGLE IMPORTANTE : ne mets ici que des comptes DESTINÉS AUX PROFS.
+# Un compte destiné aux APPRENANTS (Français avec Pierre, Piece of French,
+# InnerFrench...) a des abonnés qui apprennent le français : ce n'est pas
+# ta cible, et ça pollue toute l'extraction.
+# ---------------------------------------------------------------------------
