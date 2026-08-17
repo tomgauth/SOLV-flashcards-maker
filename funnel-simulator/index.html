@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOLV Funnel Lab</title>
+<style>
+  :root {
+    --canvas: #EDF0F3;
+    --grid-dot: #C9D1D9;
+    --chrome: #FFFFFF;
+    --card: #FFFFFF;
+    --card-border: #D7DDE4;
+    --ink: #1C252D;
+    --ink-2: #5B6873;
+    --ink-3: #8D99A4;
+    --panel: #222B33;
+    --panel-2: #2B3540;
+    --panel-3: #38434F;
+    --panel-ink: #EAEFF3;
+    --panel-ink-2: #9DAAB6;
+    --accent: #E58A2E;
+    --accent-hover: #D97F22;
+    --accent-ink: #FFFFFF;
+    --flow: #2E9E6B;
+    --flow-ink: #FFFFFF;
+    --flow-soft: rgba(46, 158, 107, 0.13);
+    --danger: #C95F5F;
+    --danger-soft: rgba(201, 95, 95, 0.12);
+    --focus: #3E7BC0;
+    --shadow: 0 1px 2px rgba(18, 26, 33, 0.08), 0 5px 16px rgba(18, 26, 33, 0.07);
+    --radius: 10px;
+    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-num: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #151B21;
+      --grid-dot: #29323C;
+      --chrome: #1D252D;
+      --card: #202932;
+      --card-border: #323E49;
+      --ink: #E5EBF0;
+      --ink-2: #A3B0BB;
+      --ink-3: #6F7C87;
+      --panel: #10161B;
+      --panel-2: #1A222A;
+      --panel-3: #2A343E;
+      --accent: #EE9336;
+      --accent-hover: #F5A04A;
+      --flow: #38AC78;
+      --flow-soft: rgba(56, 172, 120, 0.16);
+      --danger: #D57070;
+      --danger-soft: rgba(213, 112, 112, 0.14);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 5px 16px rgba(0, 0, 0, 0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #151B21;
+    --grid-dot: #29323C;
+    --chrome: #1D252D;
+    --card: #202932;
+    --card-border: #323E49;
+    --ink: #E5EBF0;
+    --ink-2: #A3B0BB;
+    --ink-3: #6F7C87;
+    --panel: #10161B;
+    --panel-2: #1A222A;
+    --panel-3: #2A343E;
+    --accent: #EE9336;
+    --accent-hover: #F5A04A;
+    --flow: #38AC78;
+    --flow-soft: rgba(56, 172, 120, 0.16);
+    --danger: #D57070;
+    --danger-soft: rgba(213, 112, 112, 0.14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 5px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  #app { height: 100vh; display: flex; flex-direction: column; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; height: 54px; flex: none;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .brand { display: flex; align-items: baseline; gap: 8px; margin-right: 8px; }
+  .brand strong { font-size: 15px; letter-spacing: -0.01em; white-space: nowrap; }
+  .brand span { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .topbar select, .btn {
+    font: inherit; color: var(--ink);
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--ink-3); }
+  .btn:focus-visible, .topbar select:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 1px;
+  }
+  .topbar .spacer { flex: 1; }
+  .btn-sim {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    font-weight: 700; padding: 8px 18px; letter-spacing: 0.03em;
+  }
+  .btn-sim:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .hint-month { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+
+  /* ---------- Layout ---------- */
+  .main { flex: 1; display: flex; min-height: 0; }
+  .board-wrap {
+    flex: 1; overflow: auto; position: relative;
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.5px);
+    background-size: 22px 22px;
+  }
+  .board {
+    display: flex; align-items: center;
+    padding: 48px 40px; min-width: max-content; min-height: 100%;
+  }
+
+  /* ---------- Step cards ---------- */
+  .step {
+    width: 198px; flex: none;
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    position: relative;
+  }
+  .step-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 10px 6px;
+  }
+  .step-icon { flex: none; color: var(--ink-2); display: grid; place-items: center; }
+  .step-icon svg { display: block; }
+  .ic-accent { fill: var(--accent); stroke: none; }
+  .ic-flow { fill: var(--flow); stroke: none; }
+  .step-name {
+    width: 100%; font: inherit; font-weight: 600; color: var(--ink);
+    background: transparent; border: 1px solid transparent; border-radius: 6px;
+    padding: 2px 4px;
+  }
+  .step-name:hover { border-color: var(--card-border); }
+  .step-name:focus { border-color: var(--focus); outline: none; background: var(--canvas); }
+  .step-tools {
+    position: absolute; top: -13px; right: 8px; display: none; gap: 4px;
+  }
+  .step:hover .step-tools, .step:focus-within .step-tools { display: flex; }
+  .step-tools button {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1px solid var(--card-border); background: var(--chrome); color: var(--ink-2);
+    cursor: pointer; font-size: 12px; line-height: 1; display: grid; place-items: center;
+    box-shadow: var(--shadow);
+  }
+  .step-tools button:hover { color: var(--ink); border-color: var(--ink-3); }
+  .step-tools button.del:hover { color: var(--danger); border-color: var(--danger); }
+  .step-body { padding: 2px 12px 8px; display: grid; gap: 6px; }
+  .frow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .frow label { font-size: 12px; color: var(--ink-2); }
+  .frow input {
+    width: 74px; font-family: var(--font-num); font-size: 13px; text-align: right;
+    color: var(--ink); background: var(--canvas);
+    border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 6px;
+  }
+  .adv { border-top: 1px dashed var(--card-border); padding-top: 4px; }
+  .adv summary {
+    font-size: 11px; color: var(--ink-3); cursor: pointer; list-style: none; user-select: none;
+  }
+  .adv summary::before { content: "▸ "; }
+  .adv[open] summary::before { content: "▾ "; }
+  .adv .frow { margin-top: 6px; }
+  .adv input { width: 58px; }
+  .step-count {
+    border-top: 1px solid var(--card-border);
+    padding: 8px 12px 10px; border-radius: 0 0 var(--radius) var(--radius);
+    background: var(--flow-soft);
+  }
+  .step-count .big {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: 21px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .step-count .big .unit { font-size: 11px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; margin-left: 4px; }
+  .step-count .cap { font-size: 11px; color: var(--ink-2); }
+  .step-count .money { font-family: var(--font-num); font-size: 13px; font-weight: 700; color: var(--flow); }
+  .step-count .simrange {
+    font-family: var(--font-num); font-size: 10.5px; color: var(--ink-3); display: block; margin-top: 2px;
+  }
+  .step.is-sales .step-count { background: var(--flow-soft); }
+
+  /* ---------- Connectors ---------- */
+  .conn { width: 104px; flex: none; position: relative; height: 96px; }
+  .conn .line { position: absolute; left: 0; right: 0; top: 34px; height: 2px; background: var(--ink-3); opacity: 0.55; }
+  .conn .line::after {
+    content: ""; position: absolute; right: -1px; top: -4px;
+    border-left: 8px solid var(--ink-3); border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+  }
+  .conn .dot {
+    position: absolute; top: 31px; left: 0; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); opacity: 0;
+  }
+  @keyframes flowdot { from { left: 0; opacity: 0.9; } to { left: 92px; opacity: 0.9; } }
+  .conn.animating .dot { animation: flowdot 0.7s linear 2; }
+  @media (prefers-reduced-motion: reduce) { .conn.animating .dot { animation: none; } }
+  .conn .rate {
+    position: absolute; top: 44px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center;
+    background: var(--flow); color: var(--flow-ink); border-radius: 999px;
+    padding: 2px 7px 2px 4px; box-shadow: var(--shadow);
+  }
+  .conn .rate input {
+    width: 44px; border: none; background: transparent; color: var(--flow-ink);
+    font-family: var(--font-num); font-size: 12.5px; font-weight: 700; text-align: right; padding: 1px 2px;
+  }
+  .conn .rate input:focus { outline: 1px solid rgba(255,255,255,0.7); border-radius: 4px; }
+  .conn .rate .pct { font-size: 11px; font-weight: 700; }
+  .conn .addbtn {
+    position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px dashed var(--ink-3); background: var(--chrome); color: var(--ink-2);
+    font-size: 13px; line-height: 1; cursor: pointer; opacity: 0; display: grid; place-items: center;
+  }
+  .conn:hover .addbtn, .conn .addbtn:focus-visible { opacity: 1; }
+  .board .end-add {
+    margin-left: 18px; flex: none;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1.5px dashed var(--ink-3); background: transparent; color: var(--ink-2);
+    font-size: 18px; cursor: pointer;
+  }
+  .board .end-add:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 304px; flex: none; overflow-y: auto;
+    background: var(--panel); color: var(--panel-ink);
+  }
+  .sb-section { border-bottom: 1px solid var(--panel-3); }
+  .sb-section > summary {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; cursor: pointer; list-style: none; user-select: none;
+    font-weight: 700; font-size: 13px; letter-spacing: 0.02em;
+    background: var(--panel-2);
+  }
+  .sb-section > summary::-webkit-details-marker { display: none; }
+  .sb-section > summary::after { content: "▾"; color: var(--panel-ink-2); font-size: 11px; }
+  .sb-section:not([open]) > summary::after { content: "▸"; }
+  .sb-note { padding: 6px 14px 0; font-size: 10.5px; color: var(--panel-ink-2); text-transform: uppercase; letter-spacing: 0.07em; }
+  .sb-rows { padding: 6px 0 10px; }
+  .sb-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 5px 14px; font-size: 13px;
+  }
+  .sb-row .k { color: var(--panel-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sb-row .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sb-row.total { border-top: 1px solid var(--panel-3); margin-top: 4px; padding-top: 8px; }
+  .sb-row.total .k { color: var(--panel-ink); font-weight: 700; }
+  .sb-row.total .v { color: var(--accent); font-weight: 700; }
+  .sb-row input {
+    width: 64px; font-family: var(--font-num); font-size: 12.5px; text-align: right;
+    color: var(--panel-ink); background: var(--panel-2);
+    border: 1px solid var(--panel-3); border-radius: 6px; padding: 3px 6px;
+  }
+  .sb-bar { height: 3px; border-radius: 2px; background: var(--flow); margin: 0 14px 2px; opacity: 0.85; }
+  .profit-hero { padding: 14px; text-align: center; }
+  .profit-hero .label { font-size: 10.5px; color: var(--panel-ink-2); text-transform: uppercase; letter-spacing: 0.1em; }
+  .profit-hero .num {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px;
+  }
+  .profit-hero .num.pos { color: var(--flow); }
+  .profit-hero .num.neg { color: var(--danger); }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--panel-3); }
+  .kpi { background: var(--panel); padding: 8px 12px; }
+  .kpi .kk { font-size: 10px; color: var(--panel-ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
+  .kpi .kv { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; margin-top: 1px; }
+  .sim-empty { padding: 12px 14px 16px; font-size: 12px; color: var(--panel-ink-2); }
+  .sim-res { padding: 8px 0 14px; }
+  .sim-res .chance { text-align: center; padding: 4px 14px 10px; font-size: 13px; }
+  .sim-res .chance b { font-family: var(--font-num); font-size: 17px; }
+  .sim-res table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .sim-res th, .sim-res td { padding: 4px 14px; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  .sim-res th { color: var(--panel-ink-2); font-family: var(--font-ui); font-weight: 600; font-size: 11px; }
+  .sim-res th:first-child, .sim-res td:first-child { text-align: left; font-family: var(--font-ui); color: var(--panel-ink-2); }
+  .histo { display: block; margin: 10px 14px 0; }
+  .histo-cap { font-size: 10.5px; color: var(--panel-ink-2); padding: 2px 14px 0; display: flex; justify-content: space-between; font-family: var(--font-num); }
+
+  /* ---------- Add-step menu ---------- */
+  .menu {
+    position: fixed; z-index: 50; min-width: 210px;
+    background: var(--chrome); border: 1px solid var(--card-border);
+    border-radius: 10px; box-shadow: var(--shadow); padding: 5px;
+  }
+  .menu button {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    font: inherit; text-align: left; color: var(--ink);
+    background: none; border: none; border-radius: 7px; padding: 7px 9px; cursor: pointer;
+  }
+  .menu button:hover { background: var(--canvas); }
+  .menu button .mi { color: var(--ink-2); display: grid; place-items: center; }
+  .menu button small { color: var(--ink-3); margin-left: auto; }
+
+  /* ---------- Modal ---------- */
+  .modal-back {
+    position: fixed; inset: 0; z-index: 60; background: rgba(10, 15, 20, 0.5);
+    display: grid; place-items: center;
+  }
+  .modal {
+    width: min(560px, 92vw); background: var(--chrome); color: var(--ink);
+    border: 1px solid var(--card-border); border-radius: 12px; box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  .modal h3 { margin: 0 0 8px; font-size: 15px; }
+  .modal textarea {
+    width: 100%; height: 200px; resize: vertical;
+    font-family: var(--font-num); font-size: 12px;
+    color: var(--ink); background: var(--canvas);
+    border: 1px solid var(--card-border); border-radius: 8px; padding: 8px;
+  }
+  .modal .mrow { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; align-items: center; }
+  .modal .err { color: var(--danger); font-size: 12px; margin-right: auto; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><strong>SOLV Funnel Lab</strong><span>funnel simulator</span></div>
+    <select id="templateSel" title="Load a funnel template">
+      <option value="solv">SOLV Languages — webinar → call</option>
+      <option value="optin">Simple opt-in → sales</option>
+      <option value="blank">Blank funnel</option>
+    </select>
+    <select id="currencySel" title="Currency">
+      <option value="€">EUR €</option>
+      <option value="$">USD $</option>
+      <option value="£">GBP £</option>
+    </select>
+    <button class="btn" id="btnExport">Export</button>
+    <button class="btn" id="btnImport">Import</button>
+    <button class="btn" id="btnReset" title="Reset to the selected template">Reset</button>
+    <div class="spacer"></div>
+    <span class="hint-month">all numbers per month</span>
+    <button class="btn btn-sim" id="btnSim" title="Run a Monte-Carlo simulation using each step's range">⚗ Simulate</button>
+  </header>
+  <div class="main">
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <aside class="sidebar" id="sidebar"></aside>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ================= Icons ================= */
+const PAGE_FRAME = '<rect x="4" y="3" width="22" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="4" y1="9" x2="26" y2="9" stroke="currentColor" stroke-width="1.6"/><circle cx="7.5" cy="6" r="1" class="ic-accent"/><circle cx="10.5" cy="6" r="1" class="ic-accent"/>';
+function pageIcon(inner) {
+  return '<svg width="30" height="36" viewBox="0 0 30 36" aria-hidden="true">' + PAGE_FRAME + inner + '</svg>';
+}
+const ICONS = {
+  traffic: '<svg width="34" height="36" viewBox="0 0 34 36" aria-hidden="true">'
+    + '<circle cx="17" cy="18" r="13.5" fill="none" stroke="currentColor" stroke-width="1.8"/>'
+    + '<circle cx="17" cy="14" r="4" class="ic-accent"/>'
+    + '<path d="M9.5 26c1.2-4 4-6 7.5-6s6.3 2 7.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
+    + '</svg>',
+  optin: pageIcon('<line x1="8" y1="14" x2="22" y2="14" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="18" x2="18" y2="18" stroke="currentColor" stroke-width="1.4"/><rect x="8" y="22" width="14" height="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="27" width="14" height="3.5" rx="1" class="ic-accent"/>'),
+  webinar: pageIcon('<circle cx="15" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M13 16.5v7l5.5-3.5z" class="ic-accent"/>'),
+  survey: pageIcon('<rect x="8" y="13" width="3.5" height="3.5" class="ic-flow"/><line x1="14" y1="15" x2="22" y2="15" stroke="currentColor" stroke-width="1.4"/><rect x="8" y="20" width="3.5" height="3.5" class="ic-flow"/><line x1="14" y1="22" x2="22" y2="22" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="28.5" x2="18" y2="28.5" stroke="currentColor" stroke-width="1.4"/>'),
+  call: pageIcon('<rect x="8" y="13" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="22.5" r="1.4" class="ic-accent"/><circle cx="18" cy="22.5" r="1.4" fill="currentColor"/>'),
+  person: pageIcon('<circle cx="15" cy="17" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 29c1.2-3.6 3.6-5.4 6.5-5.4s5.3 1.8 6.5 5.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M18.5 18.5l2 2 3.5-3.8" fill="none" stroke="var(--flow)" stroke-width="1.8" stroke-linecap="round"/>'),
+  sales: pageIcon('<path d="M9 14h7l7 7-7 7-7-7z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12.5" cy="17.5" r="1.5" class="ic-accent"/>'),
+  order: pageIcon('<rect x="8" y="14" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="17.5" x2="22" y2="17.5" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="1.3"/><rect x="10" y="27" width="10" height="3" rx="1" class="ic-accent"/>'),
+  thankyou: pageIcon('<circle cx="15" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11.5 20.5l2.5 2.5 4.8-5.3" fill="none" stroke="var(--flow)" stroke-width="1.9" stroke-linecap="round"/>'),
+  email: '<svg width="30" height="36" viewBox="0 0 30 36" aria-hidden="true"><rect x="4" y="9" width="22" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 10.5L15 19l10.5-8.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  page: pageIcon('<line x1="8" y1="14" x2="22" y2="14" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="22" x2="16" y2="22" stroke="currentColor" stroke-width="1.4"/>')
+};
+
+/* Step kinds available in the "add step" menu */
+const KINDS = [
+  { icon: 'optin',    name: 'Opt-in / Landing page', rate: 20,  sales: false },
+  { icon: 'webinar',  name: 'Webinar / Video',       rate: 60,  sales: false },
+  { icon: 'survey',   name: 'Survey / Application',  rate: 80,  sales: false },
+  { icon: 'call',     name: 'Call booked',           rate: 10,  sales: false },
+  { icon: 'person',   name: 'Showed up to call',     rate: 70,  sales: false },
+  { icon: 'sales',    name: 'Sales page / Close',    rate: 5,   sales: true, price: 97 },
+  { icon: 'order',    name: 'Upsell / Order bump',   rate: 20,  sales: true, price: 47 },
+  { icon: 'email',    name: 'Email step',            rate: 40,  sales: false },
+  { icon: 'thankyou', name: 'Thank-you page',        rate: 100, sales: false },
+  { icon: 'page',     name: 'Custom step',           rate: 50,  sales: false }
+];
+
+/* ================= Templates ================= */
+/* SOLV defaults come from the "Main Funnel Numbers" Coda page:
+   weekly averages ≈ CPC €0.65, CPL €6, landing conv 9.5%, webinar show-up 75%,
+   call show-up 70%, close 25%, ≈ €2,000 per sale. Ranges from "Typical Numbers". */
+const TEMPLATES = {
+  solv: {
+    currency: '€',
+    costs: { feePct: 1.5, perSale: 0, fixed: 0 },
+    steps: [
+      { type: 'traffic', icon: 'traffic', name: 'YouTube Ads', visitors: 1250, cpc: 0.65, vari: 15 },
+      { type: 'page', icon: 'optin',   name: 'Webinar Registration', rate: 9.5, min: 5,  max: 15 },
+      { type: 'page', icon: 'webinar', name: 'Attended Webinar',     rate: 75,  min: 50, max: 90 },
+      { type: 'page', icon: 'call',    name: 'Booked a Call',        rate: 12,  min: 8,  max: 15 },
+      { type: 'page', icon: 'person',  name: 'Showed Up to Call',    rate: 70,  min: 50, max: 80 },
+      { type: 'sales', icon: 'sales',  name: 'New Student — 30/90 Challenge', rate: 25, min: 15, max: 40, price: 2000 }
+    ]
+  },
+  optin: {
+    currency: '€',
+    costs: { feePct: 2.9, perSale: 0, fixed: 0 },
+    steps: [
+      { type: 'traffic', icon: 'traffic', name: 'Facebook Ads', visitors: 2000, cpc: 0.5, vari: 20 },
+      { type: 'page', icon: 'optin', name: 'Landing Page', rate: 30, min: 20, max: 40 },
+      { type: 'sales', icon: 'sales', name: 'Mini-course Sales Page', rate: 5, min: 2, max: 8, price: 97 }
+    ]
+  },
+  blank: {
+    currency: '€',
+    costs: { feePct: 0, perSale: 0, fixed: 0 },
+    steps: [
+      { type: 'traffic', icon: 'traffic', name: 'Traffic Source', visitors: 1000, cpc: 1, vari: 15 },
+      { type: 'page', icon: 'optin', name: 'Landing Page', rate: 20, min: 12, max: 28 }
+    ]
+  }
+};
+
+/* ================= State ================= */
+const LS_KEY = 'solvFunnelLab.v1';
+let state = null;
+let simResults = null;   // cleared on any state change
+let uid = 1;
+const $ = (sel, el) => (el || document).querySelector(sel);
+const $$ = (sel, el) => Array.from((el || document).querySelectorAll(sel));
+
+function newId() { return 's' + (uid++); }
+
+function loadTemplate(key) {
+  const t = TEMPLATES[key] || TEMPLATES.solv;
+  state = JSON.parse(JSON.stringify({ template: key, currency: t.currency, costs: t.costs, steps: t.steps }));
+  state.steps.forEach(s => { s.id = newId(); });
+  simResults = null;
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || !Array.isArray(s.steps) || !s.steps.length || s.steps[0].type !== 'traffic') return false;
+    state = s;
+    let maxN = 0;
+    s.steps.forEach(st => { const n = parseInt(String(st.id).slice(1), 10); if (n > maxN) maxN = n; });
+    uid = maxN + 1;
+    return true;
+  } catch (e) { return false; }
+}
+
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage may be unavailable */ }
+  }, 250);
+}
+
+/* ================= Math ================= */
+function num(v, fallback) { const n = parseFloat(v); return isFinite(n) ? n : (fallback || 0); }
+function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+function stepRate(s) { return clamp(num(s.rate), 0, 100); }
+
+/* Deterministic (expected value) walk of the chain. */
+function computeChain() {
+  const counts = [];
+  let n = 0;
+  state.steps.forEach((s, i) => {
+    if (i === 0) { n = Math.max(0, num(s.visitors)); }
+    else { n = n * stepRate(s) / 100; }
+    counts.push(n);
+  });
+  return counts;
+}
+
+function computeSummary() {
+  const counts = computeChain();
+  const t = state.steps[0];
+  const adCost = Math.max(0, num(t.visitors)) * Math.max(0, num(t.cpc));
+  let revenue = 0;
+  const products = [];
+  let buyers = 0;
+  state.steps.forEach((s, i) => {
+    if (s.type === 'sales') {
+      const r = counts[i] * Math.max(0, num(s.price));
+      revenue += r;
+      products.push({ name: s.name, price: num(s.price), buyers: counts[i], revenue: r });
+      if (!buyers) buyers = counts[i];
+    }
+  });
+  const fees = revenue * clamp(num(state.costs.feePct), 0, 100) / 100;
+  const delivery = buyers * Math.max(0, num(state.costs.perSale));
+  const fixed = Math.max(0, num(state.costs.fixed));
+  const totalCost = adCost + fees + delivery + fixed;
+  const leads = counts.length > 1 ? counts[1] : 0;
+  return {
+    counts, adCost, revenue, products, buyers, fees, delivery, fixed, totalCost,
+    profit: revenue - totalCost,
+    roas: adCost > 0 ? revenue / adCost : null,
+    cpl: leads > 0 ? adCost / leads : null,
+    cac: buyers > 0 ? adCost / buyers : null,
+    aov: buyers > 0 ? revenue / buyers : null,
+    epc: counts[0] > 0 ? revenue / counts[0] : null
+  };
+}
+
+/* ---- Monte-Carlo ---- */
+function triang(a, c, b) {
+  if (b <= a) return a;
+  const u = Math.random(), F = (c - a) / (b - a);
+  return u < F ? a + Math.sqrt(u * (b - a) * (c - a)) : b - Math.sqrt((1 - u) * (b - a) * (b - c));
+}
+let gaussSpare = null;
+function gauss() {
+  if (gaussSpare !== null) { const v = gaussSpare; gaussSpare = null; return v; }
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  const m = Math.sqrt(-2 * Math.log(u));
+  gaussSpare = m * Math.sin(2 * Math.PI * v);
+  return m * Math.cos(2 * Math.PI * v);
+}
+function binomial(n, p) {
+  n = Math.round(n);
+  if (n <= 0 || p <= 0) return 0;
+  if (p >= 1) return n;
+  if (n <= 300) {
+    let k = 0;
+    for (let i = 0; i < n; i++) if (Math.random() < p) k++;
+    return k;
+  }
+  const mean = n * p, sd = Math.sqrt(n * p * (1 - p));
+  return clamp(Math.round(mean + gauss() * sd), 0, n);
+}
+function percentile(sorted, q) {
+  if (!sorted.length) return 0;
+  const idx = (sorted.length - 1) * q;
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+function runSimulation(runs) {
+  runs = runs || 1000;
+  const S = state.steps;
+  const perStep = S.map(() => new Array(runs));
+  const profits = new Array(runs), revenues = new Array(runs), buyersArr = new Array(runs);
+  const t = S[0];
+  const vari = clamp(num(t.vari, 15), 0, 90) / 100;
+  const v0 = Math.max(0, num(t.visitors)), cpc0 = Math.max(0, num(t.cpc));
+  for (let r = 0; r < runs; r++) {
+    let n = Math.round(triang(v0 * (1 - vari), v0, v0 * (1 + vari)));
+    const cpc = triang(cpc0 * (1 - vari), cpc0, cpc0 * (1 + vari));
+    const adCost = n * cpc;
+    let revenue = 0, buyers = 0;
+    perStep[0][r] = n;
+    for (let i = 1; i < S.length; i++) {
+      const s = S[i];
+      const mode = stepRate(s);
+      const lo = clamp(Math.min(num(s.min, mode), mode), 0, 100);
+      const hi = clamp(Math.max(num(s.max, mode), mode), 0, 100);
+      const p = triang(lo, mode, hi) / 100;
+      n = binomial(n, p);
+      perStep[i][r] = n;
+      if (s.type === 'sales') {
+        revenue += n * Math.max(0, num(s.price));
+        if (!buyers) buyers = n;
+      }
+    }
+    const fees = revenue * clamp(num(state.costs.feePct), 0, 100) / 100;
+    const delivery = buyers * Math.max(0, num(state.costs.perSale));
+    const cost = adCost + fees + delivery + Math.max(0, num(state.costs.fixed));
+    profits[r] = revenue - cost;
+    revenues[r] = revenue;
+    buyersArr[r] = buyers;
+  }
+  const sortNum = a => a.slice().sort((x, y) => x - y);
+  const pf = sortNum(profits), rv = sortNum(revenues), by = sortNum(buyersArr);
+  simResults = {
+    runs,
+    profit:  { p10: percentile(pf, 0.1), p50: percentile(pf, 0.5), p90: percentile(pf, 0.9) },
+    revenue: { p10: percentile(rv, 0.1), p50: percentile(rv, 0.5), p90: percentile(rv, 0.9) },
+    buyers:  { p10: percentile(by, 0.1), p50: percentile(by, 0.5), p90: percentile(by, 0.9) },
+    chance: profits.filter(p => p > 0).length / runs,
+    profits: pf,
+    perStep: perStep.map(arr => {
+      const s = sortNum(arr);
+      return { p10: percentile(s, 0.1), p90: percentile(s, 0.9) };
+    })
+  };
+}
+
+/* ================= Formatting ================= */
+function cur() { return state.currency || '€'; }
+function fmtPeople(n) {
+  if (!isFinite(n)) return '—';
+  if (n >= 100) return Math.round(n).toLocaleString('en-US');
+  if (n >= 10) return (Math.round(n * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return (Math.round(n * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+function fmtMoney(n) {
+  if (n === null || !isFinite(n)) return '—';
+  const neg = n < 0; const a = Math.abs(n);
+  const s = a >= 100 ? Math.round(a).toLocaleString('en-US')
+        : a.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (neg ? '−' : '') + cur() + s;
+}
+function fmtRatio(n) { return n === null || !isFinite(n) ? '—' : (Math.round(n * 100) / 100).toLocaleString('en-US'); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ================= Board rendering ================= */
+function render() {
+  renderBoard();
+  renderSidebar();
+  recalc();
+}
+
+function renderBoard() {
+  const board = $('#board');
+  board.innerHTML = '';
+  state.steps.forEach((s, i) => {
+    if (i > 0) board.appendChild(connEl(s, i));
+    board.appendChild(stepEl(s, i));
+  });
+  const add = document.createElement('button');
+  add.className = 'end-add';
+  add.title = 'Add a step at the end';
+  add.textContent = '+';
+  add.addEventListener('click', e => openMenu(e.clientX, e.clientY, state.steps.length));
+  board.appendChild(add);
+}
+
+function connEl(s, i) {
+  const el = document.createElement('div');
+  el.className = 'conn';
+  el.innerHTML = '<div class="line"></div><div class="dot"></div>'
+    + '<span class="rate"><input type="number" step="0.1" min="0" max="100" value="' + esc(s.rate) + '" aria-label="Conversion rate into ' + esc(s.name) + '"><span class="pct">%</span></span>'
+    + '<button class="addbtn" title="Insert a step here">+</button>';
+  const input = $('input', el);
+  input.addEventListener('input', () => { s.rate = num(input.value); touch(); });
+  input.addEventListener('change', () => { input.value = stepRate(s); });
+  $('.addbtn', el).addEventListener('click', e => openMenu(e.clientX, e.clientY, i));
+  return el;
+}
+
+function stepEl(s, i) {
+  const el = document.createElement('div');
+  el.className = 'step' + (s.type === 'sales' ? ' is-sales' : '');
+  el.dataset.id = s.id;
+
+  let tools = '';
+  if (i > 0) {
+    tools = '<div class="step-tools">'
+      + (i > 1 ? '<button class="mv-l" title="Move left">‹</button>' : '')
+      + (i < state.steps.length - 1 ? '<button class="mv-r" title="Move right">›</button>' : '')
+      + '<button class="del" title="Delete step">✕</button></div>';
+  }
+
+  let body = '';
+  if (s.type === 'traffic') {
+    body = '<div class="frow"><label>Visitors / mo</label><input class="in-visitors" type="number" min="0" step="10" value="' + esc(s.visitors) + '"></div>'
+      + '<div class="frow"><label>Cost per click</label><input class="in-cpc" type="number" min="0" step="0.01" value="' + esc(s.cpc) + '"></div>'
+      + '<details class="adv"><summary>Simulation range</summary>'
+      + '<div class="frow"><label>Variability ±%</label><input class="in-vari" type="number" min="0" max="90" step="1" value="' + esc(s.vari == null ? 15 : s.vari) + '"></div></details>';
+  } else {
+    const mn = s.min == null ? '' : s.min, mx = s.max == null ? '' : s.max;
+    const price = s.type === 'sales'
+      ? '<div class="frow"><label>Price</label><input class="in-price" type="number" min="0" step="1" value="' + esc(s.price) + '"></div>' : '';
+    body = price
+      + '<details class="adv"><summary>Simulation range</summary>'
+      + '<div class="frow"><label>Rate min–max %</label><span>'
+      + '<input class="in-min" type="number" min="0" max="100" step="0.5" value="' + esc(mn) + '" aria-label="Minimum rate"> – '
+      + '<input class="in-max" type="number" min="0" max="100" step="0.5" value="' + esc(mx) + '" aria-label="Maximum rate">'
+      + '</span></div></details>';
+  }
+
+  el.innerHTML = tools
+    + '<div class="step-head"><span class="step-icon">' + (ICONS[s.icon] || ICONS.page) + '</span>'
+    + '<input class="step-name" value="' + esc(s.name) + '" aria-label="Step name"></div>'
+    + '<div class="step-body">' + body + '</div>'
+    + '<div class="step-count"><span class="big"><span class="cnt">0</span><span class="unit">' + (s.type === 'sales' ? 'sales/mo' : (i === 0 ? 'clicks/mo' : '/mo')) + '</span></span>'
+    + '<span class="simrange" hidden></span>'
+    + '<div class="cap"></div>'
+    + (s.type === 'sales' ? '<div class="money"></div>' : '')
+    + '</div>';
+
+  $('.step-name', el).addEventListener('change', e => { s.name = e.target.value.trim() || s.name; e.target.value = s.name; touch(); renderProducts(); });
+  const wire = (sel, fn) => { const inp = $(sel, el); if (inp) inp.addEventListener('input', () => { fn(inp); touch(); }); };
+  wire('.in-visitors', inp => { s.visitors = Math.max(0, num(inp.value)); });
+  wire('.in-cpc', inp => { s.cpc = Math.max(0, num(inp.value)); });
+  wire('.in-vari', inp => { s.vari = clamp(num(inp.value, 15), 0, 90); });
+  wire('.in-price', inp => { s.price = Math.max(0, num(inp.value)); });
+  wire('.in-min', inp => { s.min = inp.value === '' ? null : clamp(num(inp.value), 0, 100); });
+  wire('.in-max', inp => { s.max = inp.value === '' ? null : clamp(num(inp.value), 0, 100); });
+
+  const on = (sel, fn) => { const b = $(sel, el); if (b) b.addEventListener('click', fn); };
+  on('.del', () => { state.steps.splice(i, 1); touch(); render(); });
+  on('.mv-l', () => { swap(i, i - 1); });
+  on('.mv-r', () => { swap(i, i + 1); });
+  return el;
+}
+
+function swap(a, b) {
+  if (b < 1 || b >= state.steps.length) return;
+  const t = state.steps[a]; state.steps[a] = state.steps[b]; state.steps[b] = t;
+  touch(); render();
+}
+
+/* Called on every value edit: invalidates sim, recomputes, autosaves. */
+function touch() {
+  simResults = null;
+  recalc();
+  scheduleSave();
+}
+
+/* Update all display-only nodes without rebuilding inputs (keeps focus). */
+function recalc() {
+  const sum = computeSummary();
+  const steps = state.steps;
+  $$('#board .step').forEach((el, idx) => {
+    const s = steps[idx];
+    if (!s) return;
+    const n = sum.counts[idx];
+    $('.cnt', el).textContent = fmtPeople(n);
+    const cap = $('.cap', el);
+    if (idx === 0) {
+      cap.textContent = 'ad spend ' + fmtMoney(sum.adCost);
+    } else {
+      cap.textContent = 'of ' + fmtPeople(sum.counts[idx - 1]) + ' · ' + stepRate(s) + '%';
+    }
+    if (s.type === 'sales') {
+      $('.money', el).textContent = fmtMoney(n * Math.max(0, num(s.price))) + ' /mo';
+    }
+    const sr = $('.simrange', el);
+    if (simResults && simResults.perStep[idx]) {
+      sr.hidden = false;
+      sr.textContent = 'sim ' + fmtPeople(simResults.perStep[idx].p10) + ' – ' + fmtPeople(simResults.perStep[idx].p90);
+    } else { sr.hidden = true; }
+  });
+  renderProducts();
+  renderTrafficRows(sum);
+  renderExpenseVals(sum);
+  renderSummaryVals(sum);
+  renderSimPanel();
+}
+
+/* ================= Sidebar ================= */
+function renderSidebar() {
+  const sb = $('#sidebar');
+  sb.innerHTML =
+    '<details class="sb-section" open><summary>Products</summary><div class="sb-note">(monthly revenue)</div><div class="sb-rows" id="sbProducts"></div></details>'
+    + '<details class="sb-section" open><summary>Traffic</summary><div class="sb-note">(monthly visitors)</div><div class="sb-rows" id="sbTraffic"></div></details>'
+    + '<details class="sb-section" open><summary>Expenses</summary><div class="sb-note">(monthly expenses)</div><div class="sb-rows" id="sbExpenses">'
+    +   '<div class="sb-row"><span class="k">Traffic cost</span><span class="v" id="expTraffic"></span></div>'
+    +   '<div class="sb-row"><span class="k">Merchant fee %</span><span><input id="inFee" type="number" min="0" max="100" step="0.1" value="' + esc(state.costs.feePct) + '"></span></div>'
+    +   '<div class="sb-row"><span class="k">→ fees</span><span class="v" id="expFees"></span></div>'
+    +   '<div class="sb-row"><span class="k">Delivery / sale</span><span><input id="inPerSale" type="number" min="0" step="1" value="' + esc(state.costs.perSale) + '"></span></div>'
+    +   '<div class="sb-row"><span class="k">→ delivery</span><span class="v" id="expDelivery"></span></div>'
+    +   '<div class="sb-row"><span class="k">Fixed costs</span><span><input id="inFixed" type="number" min="0" step="10" value="' + esc(state.costs.fixed) + '"></span></div>'
+    +   '<div class="sb-row total"><span class="k">Total</span><span class="v" id="expTotal"></span></div>'
+    + '</div></details>'
+    + '<details class="sb-section" open><summary>Summary</summary>'
+    +   '<div class="profit-hero"><div class="label">Monthly profit</div><div class="num" id="sumProfit"></div></div>'
+    +   '<div class="kpi-grid">'
+    +     '<div class="kpi"><div class="kk">Revenue</div><div class="kv" id="sumRevenue"></div></div>'
+    +     '<div class="kpi"><div class="kk">Costs</div><div class="kv" id="sumCosts"></div></div>'
+    +     '<div class="kpi"><div class="kk">ROAS</div><div class="kv" id="sumRoas"></div></div>'
+    +     '<div class="kpi"><div class="kk">EPC</div><div class="kv" id="sumEpc"></div></div>'
+    +     '<div class="kpi"><div class="kk">CPL</div><div class="kv" id="sumCpl"></div></div>'
+    +     '<div class="kpi"><div class="kk">CAC</div><div class="kv" id="sumCac"></div></div>'
+    +     '<div class="kpi"><div class="kk">AOV</div><div class="kv" id="sumAov"></div></div>'
+    +     '<div class="kpi"><div class="kk">Sales / mo</div><div class="kv" id="sumSales"></div></div>'
+    +   '</div>'
+    + '</details>'
+    + '<details class="sb-section" open><summary>Simulation</summary><div id="simPanel"></div></details>';
+
+  const wire = (sel, fn) => { $(sel, sb).addEventListener('input', e => { fn(e.target); touch(); }); };
+  wire('#inFee', inp => { state.costs.feePct = clamp(num(inp.value), 0, 100); });
+  wire('#inPerSale', inp => { state.costs.perSale = Math.max(0, num(inp.value)); });
+  wire('#inFixed', inp => { state.costs.fixed = Math.max(0, num(inp.value)); });
+}
+
+function renderProducts() {
+  const box = $('#sbProducts');
+  if (!box) return;
+  const sum = computeSummary();
+  if (!sum.products.length) {
+    box.innerHTML = '<div class="sb-row"><span class="k">No sales step yet — add one with +</span></div>';
+    return;
+  }
+  const maxR = Math.max.apply(null, sum.products.map(p => p.revenue).concat([1]));
+  box.innerHTML = sum.products.map(p =>
+    '<div class="sb-row"><span class="k" title="' + esc(p.name) + '">' + esc(p.name) + ' (' + fmtMoney(p.price) + ')</span><span class="v">' + fmtMoney(p.revenue) + '</span></div>'
+    + '<div class="sb-bar" style="width:' + Math.max(4, Math.round(240 * p.revenue / maxR)) + 'px"></div>'
+  ).join('')
+  + '<div class="sb-row total"><span class="k">Total</span><span class="v">' + fmtMoney(sum.revenue) + '</span></div>';
+}
+
+function renderTrafficRows(sum) {
+  const box = $('#sbTraffic');
+  if (!box) return;
+  const t = state.steps[0];
+  box.innerHTML =
+    '<div class="sb-row"><span class="k">' + esc(t.name) + '</span><span class="v">' + fmtPeople(num(t.visitors)) + '</span></div>'
+    + '<div class="sb-row"><span class="k">CPC</span><span class="v">' + fmtMoney(num(t.cpc)) + '</span></div>'
+    + '<div class="sb-row total"><span class="k">Ad spend</span><span class="v">' + fmtMoney(sum.adCost) + '</span></div>';
+}
+
+function renderExpenseVals(sum) {
+  if (!$('#expTraffic')) return;
+  $('#expTraffic').textContent = fmtMoney(sum.adCost);
+  $('#expFees').textContent = fmtMoney(sum.fees);
+  $('#expDelivery').textContent = fmtMoney(sum.delivery);
+  $('#expTotal').textContent = fmtMoney(sum.totalCost);
+}
+
+function renderSummaryVals(sum) {
+  if (!$('#sumProfit')) return;
+  const p = $('#sumProfit');
+  p.textContent = fmtMoney(sum.profit);
+  p.className = 'num ' + (sum.profit >= 0 ? 'pos' : 'neg');
+  $('#sumRevenue').textContent = fmtMoney(sum.revenue);
+  $('#sumCosts').textContent = fmtMoney(sum.totalCost);
+  $('#sumRoas').textContent = sum.roas === null ? '—' : fmtRatio(sum.roas) + '×';
+  $('#sumEpc').textContent = fmtMoney(sum.epc);
+  $('#sumCpl').textContent = fmtMoney(sum.cpl);
+  $('#sumCac').textContent = fmtMoney(sum.cac);
+  $('#sumAov').textContent = fmtMoney(sum.aov);
+  $('#sumSales').textContent = fmtPeople(sum.buyers);
+}
+
+function renderSimPanel() {
+  const box = $('#simPanel');
+  if (!box) return;
+  if (!simResults) {
+    box.innerHTML = '<div class="sim-empty">Hit <b>⚗ Simulate</b> to run 1,000 Monte-Carlo months using each step’s min–max range. Results appear here (and under each step).</div>';
+    return;
+  }
+  const R = simResults;
+  const pct = Math.round(R.chance * 100);
+  box.innerHTML =
+    '<div class="sim-res">'
+    + '<div class="chance">Profitable months: <b style="color:' + (pct >= 50 ? 'var(--flow)' : 'var(--danger)') + '">' + pct + '%</b> of ' + R.runs.toLocaleString('en-US') + ' runs</div>'
+    + '<table><tr><th></th><th>P10</th><th>median</th><th>P90</th></tr>'
+    + '<tr><td>Profit</td><td>' + fmtMoney(R.profit.p10) + '</td><td>' + fmtMoney(R.profit.p50) + '</td><td>' + fmtMoney(R.profit.p90) + '</td></tr>'
+    + '<tr><td>Revenue</td><td>' + fmtMoney(R.revenue.p10) + '</td><td>' + fmtMoney(R.revenue.p50) + '</td><td>' + fmtMoney(R.revenue.p90) + '</td></tr>'
+    + '<tr><td>Sales</td><td>' + fmtPeople(R.buyers.p10) + '</td><td>' + fmtPeople(R.buyers.p50) + '</td><td>' + fmtPeople(R.buyers.p90) + '</td></tr>'
+    + '</table>'
+    + histogramSVG(R.profits)
+    + '</div>';
+}
+
+/* Profit distribution histogram: red below zero, green above. */
+function histogramSVG(sorted) {
+  if (!sorted.length) return '';
+  const W = 276, H = 74, BINS = 26;
+  const min = sorted[0], max = sorted[sorted.length - 1];
+  const span = (max - min) || 1;
+  const bins = new Array(BINS).fill(0);
+  sorted.forEach(v => {
+    const b = clamp(Math.floor((v - min) / span * BINS), 0, BINS - 1);
+    bins[b]++;
+  });
+  const peak = Math.max.apply(null, bins) || 1;
+  const bw = W / BINS;
+  let bars = '';
+  for (let i = 0; i < BINS; i++) {
+    const h = Math.round((H - 4) * bins[i] / peak);
+    if (!h) continue;
+    const center = min + (i + 0.5) / BINS * span;
+    const col = center < 0 ? 'var(--danger)' : 'var(--flow)';
+    bars += '<rect x="' + (i * bw + 1).toFixed(1) + '" y="' + (H - h) + '" width="' + (bw - 2).toFixed(1) + '" height="' + h + '" rx="2" fill="' + col + '"/>';
+  }
+  let zeroLine = '';
+  if (min < 0 && max > 0) {
+    const zx = ((0 - min) / span * W).toFixed(1);
+    zeroLine = '<line x1="' + zx + '" y1="0" x2="' + zx + '" y2="' + H + '" stroke="var(--panel-ink-2)" stroke-width="1" stroke-dasharray="2 3"/>';
+  }
+  return '<svg class="histo" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Profit distribution across simulated months">'
+    + bars + zeroLine + '</svg>'
+    + '<div class="histo-cap"><span>' + fmtMoney(min) + '</span><span>profit / mo</span><span>' + fmtMoney(max) + '</span></div>';
+}
+
+/* ================= Add-step menu ================= */
+let menuEl = null;
+function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
+function openMenu(x, y, insertAt) {
+  closeMenu();
+  menuEl = document.createElement('div');
+  menuEl.className = 'menu';
+  menuEl.innerHTML = KINDS.map((k, i) =>
+    '<button data-k="' + i + '"><span class="mi">' + ICONS[k.icon] + '</span>' + esc(k.name)
+    + (k.sales ? '<small>' + cur() + k.price + '</small>' : '<small>' + k.rate + '%</small>') + '</button>'
+  ).join('');
+  document.body.appendChild(menuEl);
+  const r = menuEl.getBoundingClientRect();
+  menuEl.style.left = clamp(x - 20, 8, window.innerWidth - r.width - 8) + 'px';
+  menuEl.style.top = clamp(y + 8, 8, window.innerHeight - r.height - 8) + 'px';
+  $$('button', menuEl).forEach(b => b.addEventListener('click', () => {
+    const k = KINDS[+b.dataset.k];
+    const step = {
+      id: newId(), type: k.sales ? 'sales' : 'page', icon: k.icon, name: k.name,
+      rate: k.rate,
+      min: Math.max(0, Math.round(k.rate * 0.6 * 10) / 10),
+      max: Math.min(100, Math.round(k.rate * 1.4 * 10) / 10)
+    };
+    if (k.sales) step.price = k.price;
+    state.steps.splice(Math.max(1, insertAt), 0, step);
+    closeMenu();
+    touch(); render();
+  }));
+  setTimeout(() => document.addEventListener('click', onDocClickMenu), 0);
+}
+function onDocClickMenu(e) {
+  if (menuEl && !menuEl.contains(e.target)) { closeMenu(); document.removeEventListener('click', onDocClickMenu); }
+}
+
+/* ================= Modals (export / import) ================= */
+function modal(title, bodyHTML, actions) {
+  const back = document.createElement('div');
+  back.className = 'modal-back';
+  back.innerHTML = '<div class="modal"><h3>' + esc(title) + '</h3>' + bodyHTML + '<div class="mrow"><span class="err"></span>' + actions + '</div></div>';
+  back.addEventListener('click', e => { if (e.target === back) back.remove(); });
+  document.body.appendChild(back);
+  return back;
+}
+function doExport() {
+  const json = JSON.stringify(state, null, 2);
+  const back = modal('Export funnel (JSON)',
+    '<textarea readonly>' + esc(json) + '</textarea>',
+    '<button class="btn" data-a="copy">Copy</button><button class="btn" data-a="close">Close</button>');
+  const ta = $('textarea', back);
+  $('[data-a="copy"]', back).addEventListener('click', () => {
+    ta.select();
+    if (navigator.clipboard) navigator.clipboard.writeText(json).catch(() => document.execCommand('copy'));
+    else document.execCommand('copy');
+    $('[data-a="copy"]', back).textContent = 'Copied ✓';
+  });
+  $('[data-a="close"]', back).addEventListener('click', () => back.remove());
+}
+function doImport() {
+  const back = modal('Import funnel (paste JSON)',
+    '<textarea placeholder=\'{"steps": [...]}\'></textarea>',
+    '<button class="btn" data-a="load">Load</button><button class="btn" data-a="close">Close</button>');
+  $('[data-a="close"]', back).addEventListener('click', () => back.remove());
+  $('[data-a="load"]', back).addEventListener('click', () => {
+    try {
+      const s = JSON.parse($('textarea', back).value);
+      if (!s || !Array.isArray(s.steps) || !s.steps.length) throw new Error('missing steps');
+      if (s.steps[0].type !== 'traffic') throw new Error('first step must be a traffic source');
+      s.steps.forEach(st => { if (!st.id) st.id = newId(); });
+      s.costs = s.costs || { feePct: 0, perSale: 0, fixed: 0 };
+      s.currency = s.currency || '€';
+      state = s;
+      simResults = null;
+      $('#currencySel').value = ['€', '$', '£'].includes(state.currency) ? state.currency : '€';
+      back.remove();
+      scheduleSave(); render();
+    } catch (err) {
+      $('.err', back).textContent = 'Invalid JSON: ' + err.message;
+    }
+  });
+}
+
+/* ================= Wiring ================= */
+function init() {
+  if (!restore()) loadTemplate('solv');
+  $('#templateSel').value = TEMPLATES[state.template] ? state.template : 'solv';
+  $('#currencySel').value = ['€', '$', '£'].includes(state.currency) ? state.currency : '€';
+
+  $('#templateSel').addEventListener('change', e => {
+    if (confirm('Load the "' + e.target.selectedOptions[0].textContent + '" template? Your current board will be replaced.')) {
+      loadTemplate(e.target.value);
+      $('#currencySel').value = state.currency;
+      scheduleSave(); render();
+    } else {
+      e.target.value = TEMPLATES[state.template] ? state.template : 'solv';
+    }
+  });
+  $('#currencySel').addEventListener('change', e => { state.currency = e.target.value; touch(); });
+  $('#btnReset').addEventListener('click', () => {
+    if (confirm('Reset the board to the selected template?')) {
+      loadTemplate($('#templateSel').value);
+      scheduleSave(); render();
+    }
+  });
+  $('#btnExport').addEventListener('click', doExport);
+  $('#btnImport').addEventListener('click', doImport);
+  $('#btnSim').addEventListener('click', () => {
+    runSimulation(1000);
+    recalc();
+    const panel = $('#simPanel');
+    if (panel) {
+      panel.closest('details').open = true;
+      panel.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
+    $$('#board .conn').forEach(c => {
+      c.classList.remove('animating');
+      void c.offsetWidth;
+      c.classList.add('animating');
+    });
+  });
+  render();
+}
+init();
+</script>
+</body>
+</html>
