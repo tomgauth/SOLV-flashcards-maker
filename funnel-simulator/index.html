@@ -446,12 +446,23 @@ function loadTemplate(key) {
   simResults = null;
 }
 
+/* currency is a closed enum: anything else (esp. from imported JSON) is dropped */
+function normalizeCurrency(s) {
+  if (!['€', '$', '£'].includes(s.currency)) s.currency = '€';
+}
+function normalizeCosts(s) {
+  const c = (s.costs && typeof s.costs === 'object' && !Array.isArray(s.costs)) ? s.costs : {};
+  s.costs = { feePct: clamp(num(c.feePct), 0, 100), perSale: Math.max(0, num(c.perSale)), fixed: Math.max(0, num(c.fixed)) };
+}
+
 function restore() {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return false;
     const s = JSON.parse(raw);
     if (!s || !Array.isArray(s.steps) || !s.steps.length || s.steps[0].type !== 'traffic') return false;
+    normalizeCurrency(s);
+    normalizeCosts(s);
     state = s;
     let maxN = 0;
     s.steps.forEach(st => { const n = parseInt(String(st.id).slice(1), 10); if (n > maxN) maxN = n; });
@@ -491,22 +502,23 @@ function computeSummary() {
   const adCost = Math.max(0, num(t.visitors)) * Math.max(0, num(t.cpc));
   let revenue = 0;
   const products = [];
-  let buyers = 0;
+  let buyers = 0, totalSales = 0;
   state.steps.forEach((s, i) => {
     if (s.type === 'sales') {
       const r = counts[i] * Math.max(0, num(s.price));
       revenue += r;
       products.push({ name: s.name, price: num(s.price), buyers: counts[i], revenue: r });
       if (!buyers) buyers = counts[i];
+      totalSales += counts[i];
     }
   });
   const fees = revenue * clamp(num(state.costs.feePct), 0, 100) / 100;
-  const delivery = buyers * Math.max(0, num(state.costs.perSale));
+  const delivery = totalSales * Math.max(0, num(state.costs.perSale));
   const fixed = Math.max(0, num(state.costs.fixed));
   const totalCost = adCost + fees + delivery + fixed;
   const leads = counts.length > 1 ? counts[1] : 0;
   return {
-    counts, adCost, revenue, products, buyers, fees, delivery, fixed, totalCost,
+    counts, adCost, revenue, products, buyers, totalSales, fees, delivery, fixed, totalCost,
     profit: revenue - totalCost,
     roas: adCost > 0 ? revenue / adCost : null,
     cpl: leads > 0 ? adCost / leads : null,
@@ -557,33 +569,35 @@ function runSimulation(runs) {
   const perStep = S.map(() => new Array(runs));
   const profits = new Array(runs), revenues = new Array(runs), buyersArr = new Array(runs);
   const t = S[0];
-  const vari = clamp(num(t.vari, 15), 0, 90) / 100;
+  const vari = clamp(num(t.vari), 0, 90) / 100;
   const v0 = Math.max(0, num(t.visitors)), cpc0 = Math.max(0, num(t.cpc));
   for (let r = 0; r < runs; r++) {
     let n = Math.round(triang(v0 * (1 - vari), v0, v0 * (1 + vari)));
     const cpc = triang(cpc0 * (1 - vari), cpc0, cpc0 * (1 + vari));
     const adCost = n * cpc;
-    let revenue = 0, buyers = 0;
+    let revenue = 0, buyers = 0, totalSales = 0;
     perStep[0][r] = n;
     for (let i = 1; i < S.length; i++) {
       const s = S[i];
       const mode = stepRate(s);
-      const lo = clamp(Math.min(num(s.min, mode), mode), 0, 100);
-      const hi = clamp(Math.max(num(s.max, mode), mode), 0, 100);
+      const mn = num(s.min, mode), mx = num(s.max, mode);
+      const lo = clamp(Math.min(mn, mx, mode), 0, 100);
+      const hi = clamp(Math.max(mn, mx, mode), 0, 100);
       const p = triang(lo, mode, hi) / 100;
       n = binomial(n, p);
       perStep[i][r] = n;
       if (s.type === 'sales') {
         revenue += n * Math.max(0, num(s.price));
         if (!buyers) buyers = n;
+        totalSales += n;
       }
     }
     const fees = revenue * clamp(num(state.costs.feePct), 0, 100) / 100;
-    const delivery = buyers * Math.max(0, num(state.costs.perSale));
+    const delivery = totalSales * Math.max(0, num(state.costs.perSale));
     const cost = adCost + fees + delivery + Math.max(0, num(state.costs.fixed));
     profits[r] = revenue - cost;
     revenues[r] = revenue;
-    buyersArr[r] = buyers;
+    buyersArr[r] = totalSales;
   }
   const sortNum = a => a.slice().sort((x, y) => x - y);
   const pf = sortNum(profits), rv = sortNum(revenues), by = sortNum(buyersArr);
@@ -674,7 +688,7 @@ function stepEl(s, i) {
     body = '<div class="frow"><label>Visitors / mo</label><input class="in-visitors" type="number" min="0" step="10" value="' + esc(s.visitors) + '"></div>'
       + '<div class="frow"><label>Cost per click</label><input class="in-cpc" type="number" min="0" step="0.01" value="' + esc(s.cpc) + '"></div>'
       + '<details class="adv"><summary>Simulation range</summary>'
-      + '<div class="frow"><label>Variability ±%</label><input class="in-vari" type="number" min="0" max="90" step="1" value="' + esc(s.vari == null ? 15 : s.vari) + '"></div></details>';
+      + '<div class="frow"><label>Variability ±%</label><input class="in-vari" type="number" min="0" max="90" step="1" value="' + esc(s.vari == null ? '' : s.vari) + '"></div></details>';
   } else {
     const mn = s.min == null ? '' : s.min, mx = s.max == null ? '' : s.max;
     const price = s.type === 'sales'
@@ -701,7 +715,7 @@ function stepEl(s, i) {
   const wire = (sel, fn) => { const inp = $(sel, el); if (inp) inp.addEventListener('input', () => { fn(inp); touch(); }); };
   wire('.in-visitors', inp => { s.visitors = Math.max(0, num(inp.value)); });
   wire('.in-cpc', inp => { s.cpc = Math.max(0, num(inp.value)); });
-  wire('.in-vari', inp => { s.vari = clamp(num(inp.value, 15), 0, 90); });
+  wire('.in-vari', inp => { s.vari = inp.value === '' ? null : clamp(num(inp.value), 0, 90); });
   wire('.in-price', inp => { s.price = Math.max(0, num(inp.value)); });
   wire('.in-min', inp => { s.min = inp.value === '' ? null : clamp(num(inp.value), 0, 100); });
   wire('.in-max', inp => { s.max = inp.value === '' ? null : clamp(num(inp.value), 0, 100); });
@@ -839,7 +853,7 @@ function renderSummaryVals(sum) {
   $('#sumCpl').textContent = fmtMoney(sum.cpl);
   $('#sumCac').textContent = fmtMoney(sum.cac);
   $('#sumAov').textContent = fmtMoney(sum.aov);
-  $('#sumSales').textContent = fmtPeople(sum.buyers);
+  $('#sumSales').textContent = fmtPeople(sum.totalSales);
 }
 
 function renderSimPanel() {
@@ -933,7 +947,9 @@ function modal(title, bodyHTML, actions) {
   const back = document.createElement('div');
   back.className = 'modal-back';
   back.innerHTML = '<div class="modal"><h3>' + esc(title) + '</h3>' + bodyHTML + '<div class="mrow"><span class="err"></span>' + actions + '</div></div>';
-  back.addEventListener('click', e => { if (e.target === back) back.remove(); });
+  let downOnBack = false;
+  back.addEventListener('pointerdown', e => { downOnBack = (e.target === back); });
+  back.addEventListener('click', e => { if (e.target === back && downOnBack) back.remove(); });
   document.body.appendChild(back);
   return back;
 }
@@ -962,11 +978,11 @@ function doImport() {
       if (!s || !Array.isArray(s.steps) || !s.steps.length) throw new Error('missing steps');
       if (s.steps[0].type !== 'traffic') throw new Error('first step must be a traffic source');
       s.steps.forEach(st => { if (!st.id) st.id = newId(); });
-      s.costs = s.costs || { feePct: 0, perSale: 0, fixed: 0 };
-      s.currency = s.currency || '€';
+      normalizeCosts(s);
+      normalizeCurrency(s);
       state = s;
       simResults = null;
-      $('#currencySel').value = ['€', '$', '£'].includes(state.currency) ? state.currency : '€';
+      $('#currencySel').value = state.currency;
       back.remove();
       scheduleSave(); render();
     } catch (err) {
@@ -994,6 +1010,7 @@ function init() {
   $('#btnReset').addEventListener('click', () => {
     if (confirm('Reset the board to the selected template?')) {
       loadTemplate($('#templateSel').value);
+      $('#currencySel').value = state.currency;
       scheduleSave(); render();
     }
   });
