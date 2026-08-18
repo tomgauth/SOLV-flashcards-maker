@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas des Funnels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16323a; --cream:#fdf7ef; --turq:#13b0ab; --turq-d:#0c7e7b;
+  --coral:#fb5a63; --coral-d:#d63b46; --orange:#ff7a2e; --orange-d:#b25417;
+  --mark:rgba(19,176,171,.26); --muted:#5f7077; --line:#efe4d4;
+  --f-title:"Bricolage Grotesque",Inter,system-ui,sans-serif;
+  --f-body:Inter,system-ui,Arial,sans-serif;
+  --f-hand:Caveat,"Segoe Print","Comic Sans MS",cursive;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--cream);color:var(--ink);font-family:var(--f-body);
+  -webkit-font-smoothing:antialiased;line-height:1.55;font-size:15px}
+.page{max-width:1080px;margin:0 auto;padding:26px 22px 80px}
+
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:44px;flex-wrap:wrap}
+.brand{font-family:var(--f-title);font-weight:800;font-size:21px;letter-spacing:-.01em}
+.brand .dot{color:var(--coral)}
+.pill{font-weight:600;font-size:13px;color:var(--turq-d);background:#e3f6f4;
+  border:1px solid #bfe9e5;padding:7px 14px;border-radius:999px}
+
+.kick{font-family:var(--f-hand);font-weight:600;font-size:26px;color:var(--turq-d);margin:0 0 6px;transform:rotate(-1.5deg);display:inline-block}
+h1{font-family:var(--f-title);font-weight:800;letter-spacing:-.02em;
+  font-size:clamp(32px,5.4vw,50px);line-height:1.05;margin:.1em 0 .35em}
+.hl{position:relative;white-space:nowrap}
+.hl:after{content:"";position:absolute;left:-.07em;right:-.07em;bottom:.05em;height:.4em;
+  background:var(--mark);z-index:-1;transform:rotate(-1.2deg);border-radius:2px}
+.sub{font-size:17px;color:var(--muted);max-width:62ch;margin:0 0 26px}
+
+/* stats strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0 26px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+  box-shadow:0 12px 28px -24px rgba(22,50,58,.45)}
+.stat b{font-family:var(--f-title);font-weight:800;font-size:26px;display:block;letter-spacing:-.02em}
+.stat span{font-size:12.5px;color:var(--muted)}
+.stat.s-paid b{color:var(--coral-d)} .stat.s-org b{color:var(--turq-d)} .stat.s-hyb b{color:var(--orange-d)}
+
+/* ink strip (one per page) */
+.inkstrip{background:var(--ink);color:var(--cream);border-radius:14px;padding:18px 22px;margin:0 0 26px;
+  font-family:var(--f-title);font-weight:800;font-size:17px;letter-spacing:-.01em}
+.inkstrip em{font-style:normal;color:var(--coral)}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.flabel{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.fbtn{font-family:var(--f-body);font-weight:600;font-size:13.5px;color:var(--ink);
+  background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.fbtn:hover{border-color:var(--ink)}
+.fbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--cream)}
+.fbtn.t2c[aria-pressed="true"]{background:var(--turq-d);border-color:var(--turq-d)}
+.fnote{font-family:var(--f-hand);font-weight:600;font-size:21px;color:var(--turq-d);transform:rotate(-1.5deg);display:inline-block;margin:6px 0 18px}
+.fcount{font-size:13px;color:var(--muted);margin:0 0 18px}
+
+/* funnel cards */
+.fcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-bottom:22px;
+  box-shadow:0 14px 34px -26px rgba(22,50,58,.45)}
+.fhead{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.fnum{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  font-family:var(--f-title);font-weight:800;font-size:16px;color:#fff}
+.ftitle{flex:1;min-width:220px}
+.ftitle h3{font-family:var(--f-title);font-weight:800;font-size:19px;letter-spacing:-.015em;margin:2px 0 2px}
+.ftitle .lu{font-size:12.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:46%}
+@media(max-width:760px){.chips{max-width:100%;justify-content:flex-start}}
+.chip{font-size:12px;font-weight:600;border-radius:999px;padding:4px 11px;border:1px solid var(--line);color:var(--muted);background:#fff;white-space:nowrap}
+.chip.paid{color:var(--coral-d);background:#feecee;border-color:#fbd0d3}
+.chip.organic{color:var(--turq-d);background:#e3f6f4;border-color:#bfe9e5}
+.chip.hybrid{color:var(--orange-d);background:#fff0e3;border-color:#fbd9bb}
+.chip.warn{color:#fff;background:var(--coral);border-color:var(--coral)}
+.chip.conf-high{color:var(--turq-d);background:#e3f6f4;border-color:#bfe9e5}
+.chip.conf-medium{color:var(--orange-d);background:#fff0e3;border-color:#fbd9bb}
+.chip.conf-low{color:var(--coral-d);background:#feecee;border-color:#fbd0d3}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin:16px 0 4px}
+.mt{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:9px 11px}
+.mt span{display:block;font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.mt b{font-family:var(--f-title);font-weight:800;font-size:14.5px;letter-spacing:-.01em}
+.reqs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+
+.flowlab{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px}
+.flow{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:2px 2px 10px}
+.node{flex:none;width:172px;background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.node p{margin:7px 0 0;font-size:12.5px;line-height:1.4}
+.node.warnstep{background:#feecee;border-color:#fbd0d3}
+.node.warnstep p{color:var(--coral-d);font-weight:600}
+.nq{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+  font-family:var(--f-title);font-weight:800;font-size:12px;color:#fff}
+.arr{flex:none;align-self:center;color:var(--muted);font-size:15px;opacity:.7}
+
+details.notes{margin-top:8px;border-top:1px dashed #e3d6c4;padding-top:8px}
+details.notes summary{cursor:pointer;list-style:none;font-family:var(--f-hand);font-weight:600;font-size:20px;color:var(--turq-d);transform:rotate(-1deg);display:inline-block;user-select:none}
+details.notes summary::-webkit-details-marker{display:none}
+details.notes p{font-size:13.5px;color:var(--muted);margin:10px 0 0}
+details.notes .src{font-size:12px;color:#9a8f7e;margin-top:8px}
+
+.empty{display:none;background:#fff;border:1px dashed #e3d6c4;border-radius:18px;padding:40px;text-align:center;color:var(--muted)}
+.foot{margin-top:60px;border-top:1px dashed #e3d6c4;padding-top:20px;display:flex;
+  justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.fine{font-size:13px;color:#9a8f7e}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="bar">
+    <div class="brand">De Prof à Pro<span class="dot">.</span></div>
+    <div class="pill">base d'acquisition · 24 funnels · août 2026</div>
+  </div>
+
+  <p class="kick">par où arrivent tes futurs clients ✦</p>
+  <h1>L'atlas des <span class="hl">24 funnels</span>.</h1>
+  <p class="sub">Chaque chemin d'acquisition de la base, visualisé étape par étape : coût par lead, coût par client, conversion, heures par vente et pièges connus. Filtre, compare, choisis.</p>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="inkstrip">Un funnel ne se juge pas au coût par lead : il se juge au <em>coût complet d'une vente</em>, en euros et en heures.</div>
+
+  <div class="filters" id="catFilters">
+    <span class="flabel">Famille</span>
+    <button class="fbtn" data-cat="all" aria-pressed="true">Tous</button>
+    <button class="fbtn" data-cat="paid" aria-pressed="false">Payant</button>
+    <button class="fbtn" data-cat="organic" aria-pressed="false">Organique</button>
+    <button class="fbtn" data-cat="hybrid" aria-pressed="false">Hybride</button>
+  </div>
+  <div class="filters" id="roleFilters">
+    <span class="flabel">Rôle</span>
+    <button class="fbtn" data-role="all" aria-pressed="true">Tous</button>
+    <button class="fbtn" data-role="full" aria-pressed="false">Funnel complet</button>
+    <button class="fbtn" data-role="traffic" aria-pressed="false">Trafic</button>
+    <button class="fbtn" data-role="conversion" aria-pressed="false">Conversion</button>
+    <button class="fbtn" data-role="nurturing" aria-pressed="false">Nurturing</button>
+    <button class="fbtn" data-role="multiplier" aria-pressed="false">Multiplicateur</button>
+    <button class="fbtn t2c" id="t2cBtn" aria-pressed="false" title="Compatibles avec le lancement T2C">OK lancement T2C ✓</button>
+  </div>
+  <p class="fnote">compare surtout les heures par vente ✦</p>
+  <p class="fcount" id="fcount"></p>
+
+  <div id="cards"></div>
+  <div class="empty" id="empty">Aucun funnel ne correspond à ces filtres. Élargis la sélection.</div>
+
+  <div class="foot">
+    <div class="brand">De Prof à Pro<span class="dot">.</span></div>
+    <p class="fine">Atlas généré depuis acquisition_database.csv · sources détaillées dans chaque carte</p>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+const DATA = [{"id": 1, "short": "Meta-WhatsApp", "name": "Meta Lead Ads → WhatsApp", "cat": "paid", "role": "full", "leadUnit": "form fill", "ticket": [500, 3000], "cpl": [15, 35], "cac": [150, 700], "conv": [5, 10], "hps": [1.83, 4.83], "setup": [4, 12], "ramp": 4, "cap": 50, "conf": "high", "budget": 50, "hweek": 3, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "non"}, "sources": "SuperAds/LeadSync/Sotros/T.S.", "notes": "T.S. case: €100–150 ad spend → €2700+/mo, 21.7x ROAS. Speed-to-lead <5 min = 9–21x boost conv. Meta Education CPL: $13.83–$23.87 (2025), médian $19.27 — 54% sous la moyenne globale $41.53 (SuperAds).", "steps": ["Définir l'avatar client (plateforme, niveau, pays cible)", "Créer un lead magnet simple (checklist PDF ou mini-guide 1 page)", "Créer le formulaire Meta Lead Ads dans Ads Manager", "Configurer WhatsApp Business + message de bienvenue automatique", "Connecter formulaire → WhatsApp en <5 min (LeadSync ou Zapier)", "Rédiger la séquence WhatsApp : accueil → qualification → invitation appel (3–5 messages)", "Lancer la campagne à €5–10/jour (audience : profs de langue ou parents)", "Analyser le CPL après 7 jours (objectif <€30) et itérer sur le visuel", "Appel de découverte → qualifier → proposer l'offre"]}, {"id": 2, "short": "Meta-Webinar", "name": "Meta Ads → Webinar → Call", "cat": "paid", "role": "full", "leadUnit": "webinar registration", "ticket": [800, 5000], "cpl": [10, 25], "cac": [167, 1250], "conv": [2, 6], "hps": [2.67, 11.5], "setup": [20, 45], "ramp": 6, "cap": 30, "conf": "high", "budget": 300, "hweek": 6, "t2c": true, "counter": false, "audience": false, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "Porterfield/SuperAds/CommuniPass", "notes": "Porterfield: 2–6% cold; 10–15% warm list. CommuniPass: challenge graduates → call: 18–30% vs 2–4% cold calls.", "steps": ["Choisir le thème : problème précis + promesse mesurable en titre", "Créer les slides (60–90 min) : problème → méthode → 3 résultats → offre", "Configurer la page d'inscription (Systeme.io, Kajabi…)", "Rédiger la séquence email de rappel (J-2, J-1, J0 matin)", "Créer la campagne Meta Ads vers la page d'inscription", "Diffuser le webinaire en live → pitcher l'offre en fin de session", "Envoyer le replay aux inscrits avec CTA 'appel de découverte'", "Relancer les non-acheteurs à J+3 et J+7 (email + WhatsApp)", "Optimiser : taux d'inscription >30%, taux de présence >40%"]}, {"id": 3, "short": "YouTube-Webinar", "name": "YouTube Ads → Webinar → Call", "cat": "paid", "role": "full", "leadUnit": "webinar registration", "ticket": [800, 5000], "cpl": [10, 25], "cac": [125, 833], "conv": [3, 8], "hps": [2.25, 8.17], "setup": [20, 45], "ramp": 8, "cap": 30, "conf": "medium", "budget": 200, "hweek": 6, "t2c": true, "counter": false, "audience": false, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "AmpiFire/Porterfield/PPC.land", "notes": "Funnel préféré Tom pour T2C. CPL $10–20, CPV $0.02–$0.03. 2.3x ROAS gap YT vs Meta (PPC.land 2026). Intent supérieur à Meta. Ramp ajusté 8 sem (vs 6 annoncé) — courbe apprentissage créative YT + délai algo.", "steps": ["Ouvrir Google Ads et lier à la chaîne YouTube", "Définir les audiences cibles (in-market, mots-clés, similar to…)", "Filmer la vidéo pub : hook 5 sec + problème + preuve sociale + CTA (60–120 sec)", "Créer la page d'inscription webinaire (même contenu que Meta-Webinar)", "Configurer le pixel de conversion sur confirmation d'inscription", "Lancer avec €10–20/jour (format TrueView for Action)", "Tester 2–3 hooks vidéo différents sur 2 semaines", "Dérouler le webinaire et closer les participants en fin de session", "Activer le remarketing vidéo pour les vues >50% de la pub"]}, {"id": 4, "short": "Meta-VSL", "name": "Meta Ads → VSL → Call", "cat": "paid", "role": "full", "leadUnit": "call booked post-VSL", "ticket": [800, 5000], "cpl": [20, 60], "cac": [400, 2000], "conv": [3, 5], "hps": [2, 4.83], "setup": [15, 35], "ramp": 5, "cap": 25, "conf": "medium", "budget": 300, "hweek": 5, "t2c": true, "counter": false, "audience": false, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "Brunson/CommuniPass", "notes": "Brunson Perfect Webinar/VSL. Application-to-purchase 30–55% (CommuniPass) sur leads pré-filtrés par VSL.", "steps": ["Écrire le script VSL (15–25 min) : histoire → problème → solution → offre → urgence", "Filmer et monter la vidéo (ou screencast + voix)", "Héberger la VSL sur une page dédiée (Wistia, Vimeo — sans skip)", "Ajouter le formulaire de candidature sous la vidéo (visible après 10 min)", "Créer la campagne Meta Ads vers la page VSL", "Qualifier les candidats via le formulaire avant d'accorder l'appel", "Mener les appels de closing avec les candidats qualifiés", "Optimiser : taux de complétion vidéo >50% — sinon retravailler le hook"]}, {"id": 5, "short": "Magnet-Email", "name": "Lead Magnet Ciblé → Séquence Email → Call (diagnostic, template, mini-guide)", "cat": "paid", "role": "full", "leadUnit": "email opt-in", "ticket": [500, 3000], "cpl": [5, 15], "cac": [83, 750], "conv": [2, 6], "hps": [1.83, 9], "setup": [8, 20], "ramp": 6, "cap": 40, "conf": "high", "budget": 100, "hweek": 4, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "Porterfield/SuperAds", "notes": "Funnel actuel Tom (10 mai 2026). '10 cours, 10€, 10 étudiants' + Diagnostic T2C. ~22 opt-ins/mo via AUL. PRÉCISION — lead magnets efficaces pour profs de langue : (a) diagnostic personnalisé ('Quel est ton vrai niveau ?'), (b) template actionnable ('Script conversation B2'), (c) mini-guide ciblé ('5 erreurs à éviter sur iTalki'). Éviter les e-books génériques (<5% opt-in). Diagnostic interactif = opt-in 15–25%.", "steps": ["Créer le lead magnet (PDF, template, checklist) en lien direct avec l'offre", "Créer la page de capture (opt-in → téléchargement immédiat)", "Rédiger la séquence email de bienvenue : 5–7 emails en 10–14 jours", "Email 5 ou 7 : invitation à réserver un appel de découverte", "Connecter à un outil emailing (Systeme.io, Brevo, ActiveCampaign)", "Créer la campagne Meta Ads vers la page de capture", "Suivre le CPL et le taux de conversion email → appel", "A/B tester les sujets d'emails pour améliorer le taux d'ouverture"]}, {"id": 6, "short": "Search-Call", "name": "Search Ads → LP → Call", "cat": "paid", "role": "full", "leadUnit": "call booked from LP", "ticket": [800, 5000], "cpl": [50, 120], "cac": [417, 2400], "conv": [5, 12], "hps": [1.28, 3.17], "setup": [6, 15], "ramp": 4, "cap": 25, "conf": "high", "budget": 500, "hweek": 3, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "non"}, "sources": "WordStream 2025", "notes": "WordStream 2025 Education: CPL $90 moyen (+25.87% YoY), CPC $6.23, conv 11.38%. Haute intention, coût élevé.", "steps": ["Identifier les mots-clés à haute intention ('cours de français professionnel', 'professeur anglais en ligne')", "Créer le compte Google Ads", "Rédiger 3–5 annonces texte par groupe (headline : résultat + preuve)", "Créer la landing page : problème → solution → preuves → réservation d'appel", "Intégrer Calendly ou Tidycal sur la LP", "Configurer les extensions d'annonce (appel direct, liens annexes)", "Lancer à €15–25/jour et monitorer le Quality Score", "Optimiser sur le taux de conversion LP → RDV (objectif >5%)"]}, {"id": 7, "short": "FB-Groups", "name": "FB Groups — Méthode Thomas Suengas", "cat": "organic", "role": "full", "leadUnit": "call booked", "ticket": [200, 500], "cpl": [0, 0], "cac": [0, 0], "conv": [50, 90], "hps": [1.84, 6.5], "setup": [2, 6], "ramp": 2, "cap": 10, "conf": "high", "budget": 0, "hweek": 5, "t2c": false, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "oui", "writing": "non"}, "sources": "T.Su. entretien interne mai 2026", "notes": "Verbatim Thomas: 6 ventes/1.5 mois/15h = 2.5h/vente. Pack €400. 30min–1h/jour. ROI €160/h. Cap ticket ~€600. NOT applicable T2C €1500+.", "steps": ["Identifier 5–10 groupes Facebook actifs avec l'audience cible", "Rejoindre et observer 1 semaine : repérer les frustrations récurrentes", "Répondre aux questions existantes avec valeur (sans lien, sans pitch)", "Poster du contenu court et utile 1 fois/jour (30 min max)", "Identifier les membres qui posent souvent des questions ou commentent", "Envoyer un DM personnalisé basé sur leur commentaire (pas de pitch direct)", "Qualifier en conversation DM → proposer un appel court de 15–20 min", "Mener l'appel → proposer l'offre si fit détecté"]}, {"id": 8, "short": "Podcast", "name": "Podcast Guesting", "cat": "organic", "role": "traffic", "leadUnit": "email opt-in via podcast", "ticket": [800, 5000], "cpl": [0, 0], "cac": [0, 0], "conv": [8, 20], "hps": [5.63, 31.5], "setup": [5, 15], "ramp": 20, "cap": 8, "conf": "medium", "budget": 0, "hweek": 3, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "oui", "prospection": "peu", "writing": "non"}, "sources": "Prospeo/ExpertBookers 2026/Omniscient", "notes": "Range 8–20% (Prospeo 10% base; ExpertBookers: 20–40% shows premium). Ramp réel 20 sem : pitcher les shows = 4–8 sem, être booké = 4–8 sem, délai publication = 2–4 sem, puis audience agit. Cap mensuel 8 = plafond réaliste pour un prof solo. Niche show > généraliste.", "steps": ["Préparer le 'pitch invité' : expertise + angle unique + valeur pour l'audience", "Rédiger un one-pager de présentation (bio, 3 sujets proposés)", "Identifier 20–30 podcasts cibles (Listen Notes, Podchaser, Spotify)", "Pitcher par email personnalisé (2 paragraphes max, focus sur leur audience)", "Préparer 3–5 stories/exemples concrets pour l'enregistrement", "Choisir un lead magnet simple à mentionner en fin d'épisode", "Enregistrer et promouvoir l'épisode via ses propres canaux", "Relancer les hôtes après 6–8 semaines pour un deuxième passage"]}, {"id": 9, "short": "IG-Reels", "name": "IG Reels Boost + DM", "cat": "hybrid", "role": "full", "leadUnit": "DM thread started", "ticket": [100, 1000], "cpl": [2, 8], "cac": [13, 114], "conv": [7, 15], "hps": [2.17, 8.64], "setup": [12, 30], "ramp": 4, "cap": 30, "conf": "medium", "budget": 50, "hweek": 5, "t2c": false, "counter": false, "audience": false, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "non"}, "sources": "CommuniPass/CreatorFlow/Napolify", "notes": "9-Reel Test Playbook. Boost $10–15/day. DM triggered: 70–90% open, 25–40% reply. Napolify: <1 min reply = +391% conv. Cap ticket €1000.", "steps": ["Identifier 3 formats de Reels performants dans la niche", "Filmer 9 Reels avec des hooks différents (test format, angle, CTA)", "Publier un Reel par semaine pendant 9 semaines", "Identifier le Reel avec le meilleur engagement (vues, partages, sauvegardes)", "Booster le Reel gagnant à €10–15/jour pendant 5–7 jours", "Activer la réponse DM sur les commentaires avec mot-clé (ManyChat)", "Qualifier les conversations DM en <1 minute", "Proposer l'appel de découverte aux profils qualifiés"]}, {"id": 10, "short": "YT-Organic", "name": "YouTube Organique → Email → Call", "cat": "organic", "role": "traffic", "leadUnit": "email opt-in from YT viewer", "ticket": [500, 3000], "cpl": [0, 0], "cac": [0, 0], "conv": [2, 6], "hps": [9.33, 60], "setup": [15, 35], "ramp": 8, "cap": 15, "conf": "medium", "budget": 0, "hweek": 8, "t2c": true, "counter": false, "audience": true, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "non"}, "sources": "AUL data/Jérémy FLE/AmpiFire/VidOrange", "notes": "Tom AUL: 10k subs, CTR 5.23%. Jérémy FLE 0.55x = 11–17 calls/mo. 17 mois sans vidéo nov 2024→avr 2026. Max corrigé: 60h (régime stable). VidOrange: opt-in rate 0.5–2%/vue tutoriels.", "steps": ["Définir les 5–8 sujets à haute intention de recherche (TubeBuddy, KeywordTool.io)", "Créer un calendrier éditorial : 1–2 vidéos/semaine", "Optimiser chaque vidéo : titre (CTR >4%), miniature, description + lien lead magnet", "Créer la page de capture reliée au lead magnet mentionné en vidéo", "Ajouter un CTA en fin de vidéo et en description → réserver un appel", "Maintenir la régularité 8–12 semaines (critique pour l'algorithme)", "Analyser CTR, watch time, taux d'opt-in par vidéo", "Doubler les formats qui génèrent le plus d'opt-ins"]}, {"id": 11, "short": "IG-ManyChat-LT", "name": "IG Ads + ManyChat Auto-DM (low-ticket)", "cat": "paid", "role": "full", "leadUnit": "follower acquired", "ticket": [20, 297], "cpl": [0.2, 0.4], "cac": [40, 267], "conv": [0.15, 0.5], "hps": [7.17, 56.56], "setup": [8, 20], "ramp": 4, "cap": 50, "conf": "high", "budget": 100, "hweek": 3, "t2c": false, "counter": true, "audience": true, "req": {"video": "peu", "podcast": "non", "prospection": "non", "writing": "non"}, "sources": "L.C./CommuniPass/Idiomatic@", "notes": "⚠️ CONTRE-EXEMPLE à $54/h (Lucas: 0 vente/100h/$300-400). MAIS marche à €47–297: CommuniPass case 847 comments→64 enrollments. Modèle argentin $29/mo. Ticket plafond absolu €300. INAPPLICABLE T2C €1500+.", "steps": ["⚠️ Ticket max €300 — inefficace au-delà. Pas pour un programme premium.", "Optimiser le profil IG (bio : qui tu aides + résultat + offre)", "Créer un contenu régulier sur l'apprentissage des langues", "Configurer ManyChat : réponse automatique sur commentaire avec mot-clé", "Créer un abonnement ou mini-cours à <€100/mois", "Lancer une campagne IG Ads CTA 'commenter le mot X'", "Qualifier les conversations auto-déclenchées → vendre l'abonnement en DM"]}, {"id": 12, "short": "LinkedIn-SalesNav", "name": "LinkedIn DM Séquencé (Sales Navigator + déclencheur job change)", "cat": "organic", "role": "full", "leadUnit": "connection request envoyée", "ticket": [800, 3000], "cpl": [0, 0], "cac": [0, 0], "conv": [1.5, 4], "hps": [3.72, 28.2], "setup": [5, 15], "ramp": 4, "cap": 8, "conf": "medium", "budget": 0, "hweek": 5, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "oui", "writing": "peu"}, "sources": "Expandi H1 2026/Cleverly/Leadhaste/Prospeo", "notes": "Expandi 2026: 29.61% acceptance. Trigger 'changed jobs': 18% response vs 3.43% cold = 5x. Win rate known contact: 37% vs 19% cold. Limite: 80–100 req/sem. Sales Nav $110/mo = outil (pas ad spend). +142% reply avec personnalisation profonde (Leadhaste).", "steps": ["Optimiser le profil LinkedIn (titre = résultat client, section À propos = CTA)", "Souscrire à Sales Navigator (~110 €/mois)", "Configurer l'alerte 'changed jobs' sur l'audience cible", "Rédiger 3 séquences de messages : connexion → remerciement → valeur → appel", "Envoyer 15–20 demandes de connexion ciblées/jour (max 80–100/semaine)", "Envoyer le message 1 dans les 24h suivant chaque acceptation", "Personnaliser chaque échange selon le profil et les publications de la personne", "Proposer un appel de 15 min aux répondants qualifiés", "Envoyer un Loom si pas de réponse après 5 jours (voir Loom-VoiceDM)", "Suivre taux d'acceptation (>25%) et taux de réponse (>10%)"]}, {"id": 13, "short": "Cold-Email", "name": "Cold Email Multi-touch B2C (coaching/formation)", "cat": "organic", "role": "full", "leadUnit": "email envoyé (liste ciblée)", "ticket": [500, 2500], "cpl": [0, 0], "cac": [0, 0], "conv": [0.5, 3], "hps": [4.94, 84.8], "setup": [8, 20], "ramp": 3, "cap": 5, "conf": "medium", "budget": 0, "hweek": 5, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "oui", "writing": "oui"}, "sources": "Instantly 2026/Woodpecker/Leadhaste/Sopro", "notes": "Instantly 2026: 3.43% reply moyen; top 10.7%. Woodpecker: 17% personnalisé vs 7% non-perso. Séquence 4–7 emails: 27% reply. Ciblage <200 destinataires: 5.8% vs 2.1% pour listes 1000+. Full funnel B2C coaching: 500 emails → <1 vente top performer 3%.", "steps": ["Constituer une liste ultra-ciblée (<200 adresses — qualité > quantité)", "Vérifier les emails (Hunter.io, NeverBounce) et nettoyer la liste", "Configurer un domaine secondaire d'envoi (protéger le domaine principal)", "Chauffer le domaine 2–3 semaines (Instantly, Lemwarm)", "Écrire l'email 1 : accroche hyper-personnalisée + une question ouverte", "Préparer 3–4 relances espacées de 3–4 jours (valeur à chaque fois)", "Envoyer en petits batches (20–30/jour max) pour la délivrabilité", "Suivre taux d'ouverture (>40%) et de réponse (>3%)", "Traiter chaque réponse manuellement → qualifier → booker un appel", "Ajuster le copywriting si résultats sous les seuils après 200 emails"]}, {"id": 14, "short": "IG-DM-Manuel", "name": "Instagram DM Manuel Ciblé (non automatisé)", "cat": "organic", "role": "full", "leadUnit": "DM envoyé (ciblage manuel hashtag/géo)", "ticket": [200, 1500], "cpl": [0, 0], "cac": [0, 0], "conv": [1.5, 4], "hps": [2.58, 23.7], "setup": [2, 5], "ramp": 3, "cap": 8, "conf": "high", "budget": 0, "hweek": 5, "t2c": false, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "oui", "writing": "non"}, "sources": "CommuniPass/Napolify/DMtracker", "notes": "CommuniPass: cold 5–12% reply; triggered 25–40%. High-ticket ($1000+) DM thread → vente: 4–8%. End-to-end depuis DM envoyé: 1.5–4%. Volume safe: <80 DMs/jour. Réponse <1 min = +391% conv. Cap ticket ~€1500. ≠ IG-ManyChat-LT (automatisé).", "steps": ["Identifier les hashtags et localisations de l'audience cible", "Constituer une liste de 30–50 profils qualifiés par semaine (engagement actif)", "Interagir avant le DM : liker, commenter de façon authentique pendant 24–48h", "Envoyer le DM : référence spécifique + valeur + question ouverte (pas de pitch)", "Entretenir la conversation 2–3 échanges avant de qualifier les besoins", "Qualifier : objectifs, contexte, freins → fit avec l'offre ?", "Proposer un appel de découverte si fit détecté", "Répondre à tous les messages entrants en <1 minute (crucial)", "Volume : <80 DMs/jour pour éviter les restrictions Instagram"]}, {"id": 15, "short": "Loom-VoiceDM", "name": "Loom / Voice DM Personnalisé (séquence warm)", "cat": "organic", "role": "multiplier", "leadUnit": "Loom envoyé à prospect chaud", "ticket": [800, 5000], "cpl": [0, 0], "cac": [0, 0], "conv": [5, 15], "hps": [1.78, 8.17], "setup": [2, 5], "ramp": 2, "cap": 10, "conf": "medium", "budget": 0, "hweek": 3, "t2c": true, "counter": false, "audience": false, "req": {"video": "peu", "podcast": "non", "prospection": "oui", "writing": "non"}, "sources": "Prospeo/SendIQ/Weezly/MessageAR", "notes": "MULTIPLICATEUR — s'utilise avec LinkedIn, Cold-Email ou IG-DM, jamais seul. ⚠️ Langues : sans élément visuel fort, privilégier le voice DM WhatsApp audio plutôt que Loom vidéo. Prospeo: 4%→22% text→Loom (5.5x uplift). Permission-first: 15–22% reply. Timeline hook: 10.01% vs problem hook 4.39% (2.3x). Durée optimale 60–90 sec.", "steps": ["Ce funnel est un multiplicateur — combiner avec LinkedIn, Cold-Email ou IG-DM", "Identifier les prospects en conversation depuis >3 jours sans progression", "Faire 30 sec de recherche sur leur profil pour personnaliser le Loom", "Demander la permission : 'OK si je t'envoie une vidéo de 60 sec ?'", "Filmer le Loom : accueil par prénom + situation précise + 1 idée concrète + CTA (60–90 sec)", "Envoyer avec un message texte simple + lien", "Relancer par message audio WhatsApp si pas de vue après 48h", "Convertir les réponses positives en appel de découverte"]}, {"id": 16, "short": "WhatsApp-Broadcast", "name": "WhatsApp Business Broadcast (liste opt-in)", "cat": "organic", "role": "nurturing", "leadUnit": "broadcast message envoyé à liste opt-in", "ticket": [97, 800], "cpl": [0, 0], "cac": [0, 0], "conv": [3, 10], "hps": [1, 9.33], "setup": [10, 25], "ramp": 12, "cap": 15, "conf": "medium", "budget": 0, "hweek": 3, "t2c": false, "counter": false, "audience": true, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "Chatarmin 2026/CommuniPass WA", "notes": "⚠️ NURTURING uniquement — pas un canal d'acquisition froide. Chatarmin: open ~80%; CTR boutons 45–60%; reply rate 45–55%; broadcast conv 3–7%. Standard WA: 256 contacts max → API requis pour scale. RGPD opt-in strict EU. Ramp 12 sem = délai construction liste opt-in. À utiliser pour transformer des leads déjà dans le funnel, pas pour acquérir des cold leads.", "steps": ["Construire la liste opt-in (via lead magnet, mini-cours gratuit ou événement)", "Configurer WhatsApp Business API (WATI, Chatarmin — RGPD-compliant pour EU)", "Segmenter la liste par profil (niveau, objectif, langue apprise)", "Créer un calendrier de diffusion : 1–2 broadcasts/semaine maximum", "Format : valeur d'abord (80%), offre directe (20%) des messages", "Créer des boutons CTA interactifs (répondre, réserver, acheter)", "Mettre en place des flows automatisés pour les réponses fréquentes", "Suivre taux de réponse (>10%) et opt-outs (<3%)", "Pitcher l'offre premium aux segments les plus engagés"]}, {"id": 17, "short": "Paid-Challenge", "name": "Paid Challenge / Trust Bridge (€97–297 → offre premium)", "cat": "hybrid", "role": "conversion", "leadUnit": "inscription challenge payant (€97–297)", "ticket": [1500, 5000], "cpl": [0, 0], "cac": [0, 0], "conv": [5, 12], "hps": [3.78, 21.5], "setup": [15, 40], "ramp": 8, "cap": 20, "conf": "high", "budget": 0, "hweek": 8, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "CommuniPass Priya case / Sara case", "notes": "Priya: 312 inscrits/3 cohortes Q1 2026 → 22 closés à $6800 = $195K. Sara: $32K+/trimestre. Completion paid 70–80% vs 5% free (14x). Close rate graduates: 18–30% vs 2–4% cold. CAC effectif high-ticket ≈ $0 (challenge revenue offsets acquisition). Application à Tom: '7 jours pour débloquer son acquisition' → T2C €1500–2500.", "steps": ["Définir le thème du challenge : promesse concrète en 5–7 jours", "Fixer le prix d'entrée : €97–297 (filtre motivation + compense l'acquisition)", "Créer la page de vente du challenge (promesse → plan → bonus → prix)", "Créer le groupe privé participants (Telegram, Skool ou WhatsApp)", "Préparer le contenu : 1 livrable par jour + 1 live de 30–45 min", "Promouvoir via liste email, réseaux sociaux et/ou ads", "Viser 20–50 participants pour le premier lancement", "Délivrer avec excellence (objectif : 70–80% de complétion)", "Faire une offre premium aux diplômés au jour 5 ou 6", "Mener les appels de closing avec les diplômés intéressés"]}, {"id": 18, "short": "Community-Skool", "name": "Community-Led Growth (Skool/Circle — gratuit → challenge → high-ticket)", "cat": "organic", "role": "conversion", "leadUnit": "nouveau membre communauté gratuite", "ticket": [1000, 3000], "cpl": [0, 0], "cac": [0, 0], "conv": [1.5, 4], "hps": [4.33, 34.8], "setup": [20, 60], "ramp": 24, "cap": 8, "conf": "medium", "budget": 0, "hweek": 8, "t2c": false, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "oui"}, "sources": "CommuniPass/Skool data/M.B. case", "notes": "Skool 2026: free→paid challenge 22–35%. Avec audience 3K+: 30–45 jours rev. Sans: 90–180 jours. M.B. : 314 membres, $199K annualisé. Ramp 6–14 mois vers $5K MRR. Skool: $99/mo.", "steps": ["Définir le positionnement de la communauté (résultat promis aux membres gratuits)", "Créer le groupe Skool ou Circle gratuit (~$99/mois)", "Créer un 'Quick Win' de bienvenue (valeur immédiate dès l'inscription)", "Activer la gamification (points, niveaux, tableau de classement)", "Publier du contenu de valeur 3–5 fois/semaine", "Animer un live hebdomadaire de 30–60 min (AMA ou masterclass courte)", "Atteindre 100 membres actifs avant de monétiser", "Lancer un challenge payant interne (€97–297) pour les membres engagés", "Pitcher le programme premium aux compléteurs du challenge", "Activer un programme de parrainage entre membres"]}, {"id": 19, "short": "Referral", "name": "Referral Programme Structuré (parrainage clients existants)", "cat": "organic", "role": "conversion", "leadUnit": "lead référé reçu", "ticket": [500, 3000], "cpl": [0, 0], "cac": [0, 0], "conv": [30, 60], "hps": [1.06, 4.33], "setup": [3, 8], "ramp": 16, "cap": 5, "conf": "medium", "budget": 0, "hweek": 2, "t2c": false, "counter": false, "audience": true, "req": {"video": "non", "podcast": "non", "prospection": "peu", "writing": "non"}, "sources": "GrowSurf/ReferralRock/Nielsen/Extole", "notes": "GrowSurf: referral 30% mieux que autres canaux. 4x plus probable d'acheter quand référé (Nielsen). Programme structuré = 3x organique. ROI moyen 5.7x (Extole). 83% clients prêts à référer → 29% le font sans programme. Applicable Tom cohorte 2+ seulement.", "steps": ["Identifier les 5–10 clients actuels avec le NPS le plus élevé", "Créer l'offre de parrainage (réduction sur prochain module ou session bonus)", "Rédiger le message de demande de référence (naturel, non forcé)", "Envoyer le message lors d'un moment fort (victoire client, fin de module)", "Créer une landing page dédiée pour les personnes référées", "Suivre toutes les références dans un tableau simple", "Remercier chaque parrain, même sans conversion (email personnel)", "Relancer les clients existants tous les 3 mois"]}, {"id": 20, "short": "Partenariats", "name": "Partenariats Stratégiques (relocateurs / avocats immigration / Alliance Française)", "cat": "organic", "role": "full", "leadUnit": "lead envoyé par partenaire actif", "ticket": [800, 3000], "cpl": [0, 0], "cac": [0, 0], "conv": [20, 50], "hps": [3, 16.5], "setup": [5, 15], "ramp": 20, "cap": 8, "conf": "low", "budget": 0, "hweek": 4, "t2c": false, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "oui", "writing": "non"}, "sources": "Global LT/Relocation Today/Partnership Leaders", "notes": "Global LT = leader tutoring pour expatriés relocation (valide le marché). Commission 20–30% typique. Activation partenariat: 3–6 mois outreach → 1er lead. Confidence LOW — pas de benchmark public pour prof solo.", "steps": ["Identifier 15–20 partenaires potentiels (relocateurs, avocats immigration, Alliances Françaises)", "Créer un one-pager partenaire (problème résolu, résultats clients, modèle de commission)", "Pitcher par email personnalisé (2 paragraphes max)", "Proposer un appel de 20 min de découverte mutuelle", "Formaliser l'accord (commission 15–25%, lien de tracking ou code promo)", "Fournir les assets de recommandation (email template, lien de réservation direct)", "Activer 2–3 partenaires pilotes et mesurer les leads reçus sur 60 jours", "Communiquer les résultats client aux partenaires actifs (renforce la relation)"]}, {"id": 21, "short": "Webinar-Evergreen", "name": "Webinaire Evergreen Automatisé (replay 24/7 → Call)", "cat": "hybrid", "role": "full", "leadUnit": "inscription webinaire automatisé", "ticket": [800, 5000], "cpl": [8, 20], "cac": [133, 1000], "conv": [2, 8], "hps": [1.58, 9.7], "setup": [15, 35], "ramp": 10, "cap": 20, "conf": "medium", "budget": 0, "hweek": 5, "t2c": true, "counter": false, "audience": false, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "AutoGrow #2/Porterfield/EasyWebinar 2026", "notes": "Version automatisée du webinaire : tourne 24/7 une fois créé. Enregistrer un live → héberger en replay just-in-time (EasyWebinar, Demio, Webinarjam). Conv 3–8% cold ; warm list 10–15% (Porterfield). Création : investissement une fois (8–12h), puis passif. Ramp 10 sem = optimisation tunnel + chauffage email list. Différenciation vs Meta-Webinar : pas de dépendance aux ads, scalable long terme via liste email.", "steps": ["Choisir le sujet : 1 problème précis + résultat mesurable en titre", "Enregistrer un webinaire live (60–90 min) pour capturer l'énergie et les Q&R", "Monter et éditer : supprimer les temps morts, conserver les questions importantes", "Héberger en mode just-in-time (EasyWebinar, Demio) : prochain replay dans 15 min", "Créer la page d'inscription avec urgence et CTA clairs", "Rédiger la séquence email : confirmation → J+1 rappel → J+3 replay → J+5 offre → J+7 last call", "Configurer le CTA de réservation d'appel à la 70e minute du webinaire", "Tester l'intégralité du tunnel avant lancement", "Connecter une source de trafic (liste email, SEO ou ads)", "Optimiser : taux de visionnage >50% et taux de conversion sur 2 semaines"]}, {"id": 22, "short": "PLF-Video", "name": "Video Launch Formula (4 vidéos de valeur → ouverture programme)", "cat": "hybrid", "role": "full", "leadUnit": "opt-in série 4 vidéos gratuites", "ticket": [1000, 5000], "cpl": [5, 15], "cac": [83, 750], "conv": [2, 6], "hps": [2.17, 18.5], "setup": [30, 65], "ramp": 10, "cap": 25, "conf": "medium", "budget": 0, "hweek": 6, "t2c": true, "counter": false, "audience": false, "req": {"video": "oui", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "Jeff Walker PLF/AutoGrow #4/Ryan Lee 2026", "notes": "Formule de lancement 4 vidéos (Jeff Walker PLF). V1 : l'opportunité. V2 : le chemin (méthode). V3 : preuves + objections. V4 : l'offre. 7–10 jours entre opt-in et ouverture panier → fermeture 5–7 jours. Conv 2–6% des opt-ins. Application langues : '4 secrets pour doubler tes réservations iTalki'. Avantage vs webinaire : pas de live, productible à son rythme. Ramp 10 sem = production des 4 vidéos + séquence email.", "steps": ["Définir la promesse du lancement liée au programme à vendre", "Créer la page opt-in (titre = promesse + 4 vidéos gratuites)", "Filmer vidéo 1 (20–25 min) : l'opportunité — pourquoi maintenant", "Filmer vidéo 2 (20–25 min) : le chemin — ta méthode étape par étape", "Filmer vidéo 3 (20–25 min) : preuves + répondre aux 3 objections principales", "Filmer vidéo 4 (15–20 min) : révéler l'offre complète + bonus + date de fermeture", "Rédiger la séquence email (2–3 emails par vidéo + 3 emails de closing)", "Ouvrir le panier le jour de la vidéo 4 (7 jours d'ouverture max)", "Closing : urgence J-3, J-1, J0 minuit", "Analyser le taux de complétion par vidéo pour identifier les points de friction"]}, {"id": 23, "short": "SLO-Tripwire", "name": "SLO / Tripwire (atelier €47–97 auto-finance les ads → backend programme)", "cat": "paid", "role": "full", "leadUnit": "achat mini-offre (€47–97)", "ticket": [1000, 3000], "cpl": [15, 35], "cac": [50, 200], "conv": [3, 10], "hps": [1.58, 9.7], "setup": [15, 30], "ramp": 8, "cap": 30, "conf": "medium", "budget": 200, "hweek": 5, "t2c": true, "counter": false, "audience": false, "req": {"video": "peu", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "SalesflowCo/DotCom Secrets/AutoGrow 2026", "notes": "Formule SLO (Self-Liquidating Offer) : AOV ≥ CPA = acquisition quasi-gratuite. Ads → LP froide → mini-offre €47–97 (atelier enregistré) → order bump €27 + OTO €197 → liste email → backend programme €1500–2500. 2 bumps + 1 OTO = +100% AOV moyen. Application langues : 'Atelier accent authentique 7j à €47' → 15–20% prennent l'OTO → 3–5% backend. CAC affiché = coût brut avant revenus SLO (net ≈ 0 si AOV ≥ CPA). Ramp 8 sem = optimisation AOV vs CPA avant scale.", "steps": ["Créer la mini-offre SLO (atelier vidéo enregistré €47–97) : 1 résultat concret en 1–3h", "Créer la page de vente froide (1 page) : headline résultat + preuve + bouton acheter", "Configurer l'order bump (€27) sur la page de paiement : ressource complémentaire", "Créer l'OTO (One Time Offer, €97–197) affiché après l'achat : bonus ou accès communauté", "Rédiger la séquence email post-achat : valeur → confiance → invitation appel backend", "Lancer les ads Meta ou YouTube à €10–20/jour vers la LP froide", "Mesurer l'AOV moyen sur 14 jours (objectif : AOV ≥ CPA)", "Si AOV < CPA : améliorer le taux de bump ou augmenter le prix SLO", "Si AOV ≥ CPA : scaler le budget ads progressivement", "Proposer le programme premium aux acheteurs SLO par email + call de découverte"]}, {"id": 24, "short": "Leadflow-Liste", "name": "Leadflow — Build de Liste Multi-Canal (free guide → liste email → 5 chemins de graduation)", "cat": "hybrid", "role": "traffic", "leadUnit": "email opt-in (via ads multi-canal ou social organique)", "ticket": [500, 3000], "cpl": [3, 15], "cac": [50, 500], "conv": [2, 8], "hps": [1.83, 12], "setup": [8, 20], "ramp": 12, "cap": 25, "conf": "medium", "budget": 0, "hweek": 4, "t2c": true, "counter": false, "audience": false, "req": {"video": "non", "podcast": "non", "prospection": "non", "writing": "peu"}, "sources": "Leadflow Funnel framework / newsletter ads (Beehiiv, Substack) 2026", "notes": "Objectif : construire un actif email (cible 20K abonnés) via ads multi-canal : newsletters (Beehiiv Boost, Substack ads — CPL $1–3), Meta, IG, Twitter/X, LinkedIn. Mécanisme : ICE ADS (<1 min) → guide gratuit → Thank You Page (1. présentation 2. livrer la ressource 3. 'short sword' offre de conversion €47–97). 5 chemins de graduation : (1) TY page (2) fin de ressource (3) séquence email (4) retargeting ads (5) manuel outreach. Différence vs Magnet-Email : pas un funnel de vente directe — c'est un moteur de construction de liste d'abord, monétisation ensuite. Combine bien avec Webinar-Evergreen, PLF-Video ou SLO-Tripwire alimentés par la liste.", "steps": ["Créer le guide gratuit (free guide) : 1 résultat précis, 5–10 pages ou vidéo 15 min", "Créer la page d'opt-in simple : headline = résultat du guide + bouton télécharger", "Créer la Thank You Page : (1) se présenter en 2 phrases (2) livrer la ressource (3) présenter une offre 'short sword' à €47–97", "Rédiger la séquence email de nurturing (5–7 emails en 14 jours : valeur → histoire → offre)", "Ouvrir un compte Beehiiv Boost ou Substack Ads pour les newsletter ads (CPL $1–3)", "Lancer une campagne Meta/IG Ads avec le guide comme CTA (CPL $5–15)", "Activer le retargeting sur les visiteurs de la page opt-in non-convertis", "Identifier les abonnés très engagés (ouvreurs systématiques) → manuel outreach personnalisé", "Objectif : 500 abonnés qualifiés avant de lancer une offre principale", "Mesurer le taux de graduation : TY page → email seq → appel → client"]}];
+
+const SQ = ['#13b0ab', '#fb5a63', '#ff7a2e', '#16323a']; // ordre brand : turquoise, corail, orange, encre
+const CAT_FR = { paid: 'payant', organic: 'organique', hybrid: 'hybride' };
+const ROLE_FR = { full: 'funnel complet', traffic: 'trafic', conversion: 'conversion', nurturing: 'nurturing', multiplier: 'multiplicateur' };
+const CONF_FR = { high: 'confiance haute', medium: 'confiance moyenne', low: 'confiance faible' };
+
+const $ = (s, el) => (el || document).querySelector(s);
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fr(n) {
+  if (n === null || n === undefined) return null;
+  return n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+}
+function range(pair, unit) {
+  const a = pair[0], b = pair[1];
+  if (a === null && b === null) return '·';
+  if (a === null || b === null || a === b) return fr(a === null ? b : a) + unit;
+  return fr(a) + ' à ' + fr(b) + unit;
+}
+
+function chip(cls, text, title) {
+  return '<span class="chip ' + cls + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + esc(text) + '</span>';
+}
+
+function card(f) {
+  const numCol = SQ[(f.id - 1) % SQ.length];
+
+  let chips = chip(f.cat, CAT_FR[f.cat] || f.cat)
+    + chip('', ROLE_FR[f.role] || f.role)
+    + chip('conf-' + f.conf, CONF_FR[f.conf] || f.conf);
+  if (f.counter) chips += chip('warn', '⚠ contre-exemple', 'Documenté comme échec pour un ticket premium : lire les chiffres derrière');
+  if (f.t2c) chips += chip('organic', 'T2C ✓', 'Compatible avec le lancement T2C');
+  if (f.audience) chips += chip('conf-low', 'audience existante requise');
+
+  const metrics =
+    mt('Ticket', range(f.ticket, ' €'))
+    + mt('Coût / lead', range(f.cpl, ' $'))
+    + mt('Coût / client', range(f.cac, ' $'))
+    + mt('Conversion', range(f.conv, ' %'))
+    + mt('Heures / vente', range(f.hps, ' h'))
+    + mt('Setup', range(f.setup, ' h'))
+    + mt('Montée', fr(f.ramp) + ' sem')
+    + mt('Cap', fr(f.cap) + ' /mois');
+
+  let reqs = '';
+  if (f.budget > 0) reqs += chip('paid', '≥ ' + fr(f.budget) + ' €/mois de pub');
+  if (f.hweek) reqs += chip('organic', '≥ ' + fr(f.hweek) + ' h/semaine');
+  const REQ_FR = { video: 'vidéo', podcast: 'podcast', prospection: 'prospection', writing: 'écriture' };
+  Object.keys(f.req).forEach(k => {
+    if (f.req[k] === 'oui') reqs += chip('', REQ_FR[k] + ' requise');
+  });
+
+  const flow = f.steps.map((s, i) => {
+    const warn = s.indexOf('⚠') === 0;
+    const col = SQ[i % SQ.length];
+    return (i ? '<span class="arr">→</span>' : '')
+      + '<div class="node' + (warn ? ' warnstep' : '') + '">'
+      + '<span class="nq" style="background:' + col + '">' + (i + 1) + '</span>'
+      + '<p>' + esc(s.replace(/^⚠️?\s*/, warn ? '⚠ ' : '')) + '</p></div>';
+  }).join('');
+
+  return '<article class="fcard" data-cat="' + f.cat + '" data-role="' + f.role + '" data-t2c="' + f.t2c + '">'
+    + '<div class="fhead">'
+    + '<span class="fnum" style="background:' + numCol + '">' + f.id + '</span>'
+    + '<div class="ftitle"><h3>' + esc(f.name) + '</h3><div class="lu">unité de lead : ' + esc(f.leadUnit) + '</div></div>'
+    + '<div class="chips">' + chips + '</div>'
+    + '</div>'
+    + '<div class="metrics">' + metrics + '</div>'
+    + (reqs ? '<div class="reqs">' + reqs + '</div>' : '')
+    + '<div class="flowlab">Le chemin, étape par étape</div>'
+    + '<div class="flow">' + flow + '</div>'
+    + '<details class="notes"><summary>les chiffres derrière ✦</summary>'
+    + '<p>' + esc(f.notes) + '</p>'
+    + '<p class="src">Sources : ' + esc(f.sources) + '</p></details>'
+    + '</article>';
+}
+function mt(label, val) {
+  return '<div class="mt"><span>' + label + '</span><b>' + val + '</b></div>';
+}
+
+/* ----- render ----- */
+$('#cards').innerHTML = DATA.map(card).join('');
+
+const nPaid = DATA.filter(f => f.cat === 'paid').length;
+const nOrg = DATA.filter(f => f.cat === 'organic').length;
+const nHyb = DATA.filter(f => f.cat === 'hybrid').length;
+$('#stats').innerHTML =
+  '<div class="stat"><b>' + DATA.length + '</b><span>funnels dans la base</span></div>'
+  + '<div class="stat s-paid"><b>' + nPaid + '</b><span>payants</span></div>'
+  + '<div class="stat s-org"><b>' + nOrg + '</b><span>organiques</span></div>'
+  + '<div class="stat s-hyb"><b>' + nHyb + '</b><span>hybrides</span></div>';
+
+/* ----- filters ----- */
+let cat = 'all', role = 'all', t2cOnly = false;
+function apply() {
+  let shown = 0;
+  document.querySelectorAll('.fcard').forEach(el => {
+    const ok = (cat === 'all' || el.dataset.cat === cat)
+      && (role === 'all' || el.dataset.role === role)
+      && (!t2cOnly || el.dataset.t2c === 'true');
+    el.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  $('#empty').style.display = shown ? 'none' : 'block';
+  $('#fcount').textContent = shown + ' funnel' + (shown > 1 ? 's' : '') + ' affiché' + (shown > 1 ? 's' : '');
+}
+document.querySelectorAll('#catFilters .fbtn').forEach(b => b.addEventListener('click', () => {
+  cat = b.dataset.cat;
+  document.querySelectorAll('#catFilters .fbtn').forEach(x => x.setAttribute('aria-pressed', x === b));
+  apply();
+}));
+document.querySelectorAll('#roleFilters .fbtn[data-role]').forEach(b => b.addEventListener('click', () => {
+  role = b.dataset.role;
+  document.querySelectorAll('#roleFilters .fbtn[data-role]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  apply();
+}));
+$('#t2cBtn').addEventListener('click', () => {
+  t2cOnly = !t2cOnly;
+  $('#t2cBtn').setAttribute('aria-pressed', t2cOnly);
+  apply();
+});
+apply();
+</script>
+</body>
+</html>
