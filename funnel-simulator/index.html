@@ -1,79 +1,45 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SOLV Funnel Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <style>
+  /* De Prof à Pro brand tokens: deliberate single (cream) look, no dark variant */
   :root {
-    --canvas: #EDF0F3;
-    --grid-dot: #C9D1D9;
+    --canvas: #FDF7EF;
+    --grid-dot: #E3D6C4;
     --chrome: #FFFFFF;
     --card: #FFFFFF;
-    --card-border: #D7DDE4;
-    --ink: #1C252D;
-    --ink-2: #5B6873;
-    --ink-3: #8D99A4;
-    --panel: #222B33;
-    --panel-2: #2B3540;
-    --panel-3: #38434F;
-    --panel-ink: #EAEFF3;
-    --panel-ink-2: #9DAAB6;
-    --accent: #E58A2E;
-    --accent-hover: #D97F22;
+    --card-border: #EFE4D4;
+    --ink: #16323A;
+    --ink-2: #5F7077;
+    --ink-3: #9A8F7E;
+    --panel: #16323A;
+    --panel-2: #1E3E48;
+    --panel-3: #2C4E58;
+    --panel-ink: #FDF7EF;
+    --panel-ink-2: #9DB2B4;
+    --accent: #FB5A63;
+    --accent-hover: #D63B46;
     --accent-ink: #FFFFFF;
-    --flow: #2E9E6B;
+    --orange: #FF7A2E;
+    --flow: #13B0AB;
+    --flow-d: #0C7E7B;
     --flow-ink: #FFFFFF;
-    --flow-soft: rgba(46, 158, 107, 0.13);
-    --danger: #C95F5F;
-    --danger-soft: rgba(201, 95, 95, 0.12);
-    --focus: #3E7BC0;
-    --shadow: 0 1px 2px rgba(18, 26, 33, 0.08), 0 5px 16px rgba(18, 26, 33, 0.07);
-    --radius: 10px;
-    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --flow-soft: rgba(19, 176, 171, 0.13);
+    --danger: #D63B46;
+    --danger-soft: rgba(251, 90, 99, 0.12);
+    --focus: #0C7E7B;
+    --shadow: 0 1px 2px rgba(22, 50, 58, 0.06), 0 14px 34px -26px rgba(22, 50, 58, 0.45);
+    --radius: 14px;
+    --font-title: "Bricolage Grotesque", Inter, system-ui, sans-serif;
+    --font-ui: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --font-num: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #151B21;
-      --grid-dot: #29323C;
-      --chrome: #1D252D;
-      --card: #202932;
-      --card-border: #323E49;
-      --ink: #E5EBF0;
-      --ink-2: #A3B0BB;
-      --ink-3: #6F7C87;
-      --panel: #10161B;
-      --panel-2: #1A222A;
-      --panel-3: #2A343E;
-      --accent: #EE9336;
-      --accent-hover: #F5A04A;
-      --flow: #38AC78;
-      --flow-soft: rgba(56, 172, 120, 0.16);
-      --danger: #D57070;
-      --danger-soft: rgba(213, 112, 112, 0.14);
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 5px 16px rgba(0, 0, 0, 0.3);
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #151B21;
-    --grid-dot: #29323C;
-    --chrome: #1D252D;
-    --card: #202932;
-    --card-border: #323E49;
-    --ink: #E5EBF0;
-    --ink-2: #A3B0BB;
-    --ink-3: #6F7C87;
-    --panel: #10161B;
-    --panel-2: #1A222A;
-    --panel-3: #2A343E;
-    --accent: #EE9336;
-    --accent-hover: #F5A04A;
-    --flow: #38AC78;
-    --flow-soft: rgba(56, 172, 120, 0.16);
-    --danger: #D57070;
-    --danger-soft: rgba(213, 112, 112, 0.14);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 5px 16px rgba(0, 0, 0, 0.3);
+    --font-hand: Caveat, "Segoe Print", cursive;
   }
 
   * { box-sizing: border-box; }
@@ -91,36 +57,84 @@
   /* ---------- Top bar ---------- */
   .topbar {
     display: flex; align-items: center; gap: 10px;
-    padding: 0 14px; height: 54px; flex: none;
+    padding: 0 14px; height: 56px; flex: none;
     background: var(--chrome);
     border-bottom: 1px solid var(--card-border);
   }
-  .brand { display: flex; align-items: baseline; gap: 8px; margin-right: 8px; }
-  .brand strong { font-size: 15px; letter-spacing: -0.01em; white-space: nowrap; }
-  .brand span { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
-  .topbar select, .btn {
-    font: inherit; color: var(--ink);
-    background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  .brand { font-family: var(--font-title); font-weight: 800; font-size: 19px; letter-spacing: -0.01em; white-space: nowrap; margin-right: 4px; }
+  .brand .dot { color: var(--accent); }
+  .hint-month {
+    font-family: var(--font-hand); font-weight: 600; font-size: 20px; color: var(--flow-d);
+    transform: rotate(-1.5deg); display: inline-block; white-space: nowrap;
   }
-  .btn:hover { border-color: var(--ink-3); }
-  .btn:focus-visible, .topbar select:focus-visible, input:focus-visible, summary:focus-visible {
+  .topbar select, .btn {
+    font: inherit; font-weight: 600; color: var(--ink);
+    background: var(--card); border: 1.5px solid var(--card-border);
+    border-radius: 10px; padding: 6px 12px; cursor: pointer;
+  }
+  .btn:hover, .topbar select:hover { border-color: var(--ink); }
+  .btn:focus-visible, .topbar select:focus-visible, input:focus-visible, summary:focus-visible, .nav button:focus-visible {
     outline: 2px solid var(--focus); outline-offset: 1px;
   }
   .topbar .spacer { flex: 1; }
   .btn-sim {
+    font-family: var(--font-title); font-weight: 800;
     background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
-    font-weight: 700; padding: 8px 18px; letter-spacing: 0.03em;
+    padding: 8px 20px; font-size: 15px; border-radius: 12px;
   }
   .btn-sim:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-  .hint-month { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+
+  /* ---------- Funnel info strip ---------- */
+  .infobar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 14px; flex: none;
+    background: var(--chrome); border-bottom: 1px solid var(--card-border);
+  }
+  .infobar .fname { font-family: var(--font-title); font-weight: 800; font-size: 15.5px; letter-spacing: -0.01em; margin-right: 4px; }
+  .ichip {
+    font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px;
+    border: 1px solid var(--card-border); color: var(--ink-2); background: #fff; white-space: nowrap;
+  }
+  .ichip.paid { color: var(--accent-hover); background: #feecee; border-color: #fbd0d3; }
+  .ichip.organic { color: var(--flow-d); background: #e3f6f4; border-color: #bfe9e5; }
+  .ichip.hybrid { color: #b25417; background: #fff0e3; border-color: #fbd9bb; }
+  .ichip.warn { color: #fff; background: var(--accent); border-color: var(--accent); }
 
   /* ---------- Layout ---------- */
   .main { flex: 1; display: flex; min-height: 0; }
+
+  /* ---------- Funnel nav ---------- */
+  .nav {
+    width: 234px; flex: none; overflow-y: auto;
+    background: var(--chrome); border-right: 1px solid var(--card-border);
+    padding: 10px 8px 20px;
+  }
+  .nav .grp {
+    font-size: 10.5px; font-weight: 700; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 12px 8px 5px;
+  }
+  .nav button {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    font: inherit; font-size: 13px; font-weight: 600; text-align: left; color: var(--ink);
+    background: none; border: none; border-radius: 9px; padding: 7px 9px; cursor: pointer;
+  }
+  .nav button:hover { background: var(--canvas); }
+  .nav button.active { background: var(--panel); color: var(--panel-ink); }
+  .nav .fdot { flex: none; width: 8px; height: 8px; border-radius: 3px; }
+  .fdot.paid { background: var(--accent); }
+  .fdot.organic { background: var(--flow); }
+  .fdot.hybrid { background: var(--orange); }
+  .fdot.mine { background: var(--ink); }
+  .nav button.active .fdot.mine { background: var(--panel-ink); }
+  .nav .wmark { margin-left: auto; font-size: 11px; }
+
+  /* ---------- Board ---------- */
   .board-wrap {
     flex: 1; overflow: auto; position: relative;
     background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.5px);
     background-size: 22px 22px;
+    background-color: var(--canvas);
   }
   .board {
     display: flex; align-items: center;
@@ -134,24 +148,20 @@
     border-radius: var(--radius); box-shadow: var(--shadow);
     position: relative;
   }
-  .step-head {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 10px 6px;
-  }
+  .step-head { display: flex; align-items: center; gap: 8px; padding: 10px 10px 6px; }
   .step-icon { flex: none; color: var(--ink-2); display: grid; place-items: center; }
   .step-icon svg { display: block; }
   .ic-accent { fill: var(--accent); stroke: none; }
   .ic-flow { fill: var(--flow); stroke: none; }
   .step-name {
-    width: 100%; font: inherit; font-weight: 600; color: var(--ink);
+    width: 100%; font-family: var(--font-title); font-weight: 700; font-size: 13.5px;
+    letter-spacing: -0.01em; color: var(--ink);
     background: transparent; border: 1px solid transparent; border-radius: 6px;
     padding: 2px 4px;
   }
   .step-name:hover { border-color: var(--card-border); }
   .step-name:focus { border-color: var(--focus); outline: none; background: var(--canvas); }
-  .step-tools {
-    position: absolute; top: -13px; right: 8px; display: none; gap: 4px;
-  }
+  .step-tools { position: absolute; top: -13px; right: 8px; display: none; gap: 4px; }
   .step:hover .step-tools, .step:focus-within .step-tools { display: flex; }
   .step-tools button {
     width: 24px; height: 24px; border-radius: 50%;
@@ -159,7 +169,7 @@
     cursor: pointer; font-size: 12px; line-height: 1; display: grid; place-items: center;
     box-shadow: var(--shadow);
   }
-  .step-tools button:hover { color: var(--ink); border-color: var(--ink-3); }
+  .step-tools button:hover { color: var(--ink); border-color: var(--ink); }
   .step-tools button.del:hover { color: var(--danger); border-color: var(--danger); }
   .step-body { padding: 2px 12px 8px; display: grid; gap: 6px; }
   .frow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -169,10 +179,8 @@
     color: var(--ink); background: var(--canvas);
     border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 6px;
   }
-  .adv { border-top: 1px dashed var(--card-border); padding-top: 4px; }
-  .adv summary {
-    font-size: 11px; color: var(--ink-3); cursor: pointer; list-style: none; user-select: none;
-  }
+  .adv { border-top: 1px dashed #e3d6c4; padding-top: 4px; }
+  .adv summary { font-size: 11px; color: var(--ink-3); cursor: pointer; list-style: none; user-select: none; }
   .adv summary::before { content: "▸ "; }
   .adv[open] summary::before { content: "▾ "; }
   .adv .frow { margin-top: 6px; }
@@ -183,28 +191,22 @@
     background: var(--flow-soft);
   }
   .step-count .big {
-    font-family: var(--font-num); font-variant-numeric: tabular-nums;
-    font-size: 21px; font-weight: 700; letter-spacing: -0.02em;
+    font-family: var(--font-title); font-variant-numeric: tabular-nums;
+    font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
   }
-  .step-count .big .unit { font-size: 11px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; margin-left: 4px; }
+  .step-count .big .unit { font-family: var(--font-ui); font-size: 11px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; margin-left: 4px; }
   .step-count .cap { font-size: 11px; color: var(--ink-2); }
-  .step-count .money { font-family: var(--font-num); font-size: 13px; font-weight: 700; color: var(--flow); }
-  .step-count .simrange {
-    font-family: var(--font-num); font-size: 10.5px; color: var(--ink-3); display: block; margin-top: 2px;
-  }
-  .step.is-sales .step-count { background: var(--flow-soft); }
+  .step-count .money { font-family: var(--font-title); font-size: 14px; font-weight: 800; color: var(--flow-d); }
+  .step-count .simrange { font-family: var(--font-num); font-size: 10.5px; color: var(--ink-3); display: block; margin-top: 2px; }
 
   /* ---------- Connectors ---------- */
   .conn { width: 104px; flex: none; position: relative; height: 96px; }
-  .conn .line { position: absolute; left: 0; right: 0; top: 34px; height: 2px; background: var(--ink-3); opacity: 0.55; }
+  .conn .line { position: absolute; left: 0; right: 0; top: 34px; height: 2px; background: var(--ink-3); opacity: 0.5; }
   .conn .line::after {
     content: ""; position: absolute; right: -1px; top: -4px;
     border-left: 8px solid var(--ink-3); border-top: 5px solid transparent; border-bottom: 5px solid transparent;
   }
-  .conn .dot {
-    position: absolute; top: 31px; left: 0; width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent); opacity: 0;
-  }
+  .conn .dot { position: absolute; top: 31px; left: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); opacity: 0; }
   @keyframes flowdot { from { left: 0; opacity: 0.9; } to { left: 92px; opacity: 0.9; } }
   .conn.animating .dot { animation: flowdot 0.7s linear 2; }
   @media (prefers-reduced-motion: reduce) { .conn.animating .dot { animation: none; } }
@@ -235,16 +237,13 @@
   }
   .board .end-add:hover { color: var(--accent); border-color: var(--accent); }
 
-  /* ---------- Sidebar ---------- */
-  .sidebar {
-    width: 304px; flex: none; overflow-y: auto;
-    background: var(--panel); color: var(--panel-ink);
-  }
+  /* ---------- Sidebar (ink panel) ---------- */
+  .sidebar { width: 304px; flex: none; overflow-y: auto; background: var(--panel); color: var(--panel-ink); }
   .sb-section { border-bottom: 1px solid var(--panel-3); }
   .sb-section > summary {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 14px; cursor: pointer; list-style: none; user-select: none;
-    font-weight: 700; font-size: 13px; letter-spacing: 0.02em;
+    font-family: var(--font-title); font-weight: 800; font-size: 13.5px; letter-spacing: 0.01em;
     background: var(--panel-2);
   }
   .sb-section > summary::-webkit-details-marker { display: none; }
@@ -252,15 +251,12 @@
   .sb-section:not([open]) > summary::after { content: "▸"; }
   .sb-note { padding: 6px 14px 0; font-size: 10.5px; color: var(--panel-ink-2); text-transform: uppercase; letter-spacing: 0.07em; }
   .sb-rows { padding: 6px 0 10px; }
-  .sb-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 5px 14px; font-size: 13px;
-  }
+  .sb-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 14px; font-size: 13px; }
   .sb-row .k { color: var(--panel-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sb-row .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .sb-row.total { border-top: 1px solid var(--panel-3); margin-top: 4px; padding-top: 8px; }
   .sb-row.total .k { color: var(--panel-ink); font-weight: 700; }
-  .sb-row.total .v { color: var(--accent); font-weight: 700; }
+  .sb-row.total .v { color: var(--orange); font-weight: 700; }
   .sb-row input {
     width: 64px; font-family: var(--font-num); font-size: 12.5px; text-align: right;
     color: var(--panel-ink); background: var(--panel-2);
@@ -270,19 +266,19 @@
   .profit-hero { padding: 14px; text-align: center; }
   .profit-hero .label { font-size: 10.5px; color: var(--panel-ink-2); text-transform: uppercase; letter-spacing: 0.1em; }
   .profit-hero .num {
-    font-family: var(--font-num); font-variant-numeric: tabular-nums;
-    font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px;
+    font-family: var(--font-title); font-variant-numeric: tabular-nums;
+    font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin-top: 2px;
   }
   .profit-hero .num.pos { color: var(--flow); }
-  .profit-hero .num.neg { color: var(--danger); }
+  .profit-hero .num.neg { color: var(--accent); }
   .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--panel-3); }
   .kpi { background: var(--panel); padding: 8px 12px; }
   .kpi .kk { font-size: 10px; color: var(--panel-ink-2); text-transform: uppercase; letter-spacing: 0.08em; }
-  .kpi .kv { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; margin-top: 1px; }
+  .kpi .kv { font-family: var(--font-title); font-variant-numeric: tabular-nums; font-size: 15.5px; font-weight: 800; margin-top: 1px; }
   .sim-empty { padding: 12px 14px 16px; font-size: 12px; color: var(--panel-ink-2); }
   .sim-res { padding: 8px 0 14px; }
   .sim-res .chance { text-align: center; padding: 4px 14px 10px; font-size: 13px; }
-  .sim-res .chance b { font-family: var(--font-num); font-size: 17px; }
+  .sim-res .chance b { font-family: var(--font-title); font-size: 17px; }
   .sim-res table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .sim-res th, .sim-res td { padding: 4px 14px; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
   .sim-res th { color: var(--panel-ink-2); font-family: var(--font-ui); font-weight: 600; font-size: 11px; }
@@ -292,63 +288,56 @@
 
   /* ---------- Add-step menu ---------- */
   .menu {
-    position: fixed; z-index: 50; min-width: 210px;
+    position: fixed; z-index: 50; min-width: 220px;
     background: var(--chrome); border: 1px solid var(--card-border);
-    border-radius: 10px; box-shadow: var(--shadow); padding: 5px;
+    border-radius: 12px; box-shadow: var(--shadow); padding: 5px;
   }
   .menu button {
     display: flex; align-items: center; gap: 9px; width: 100%;
-    font: inherit; text-align: left; color: var(--ink);
-    background: none; border: none; border-radius: 7px; padding: 7px 9px; cursor: pointer;
+    font: inherit; font-weight: 600; text-align: left; color: var(--ink);
+    background: none; border: none; border-radius: 8px; padding: 7px 9px; cursor: pointer;
   }
   .menu button:hover { background: var(--canvas); }
   .menu button .mi { color: var(--ink-2); display: grid; place-items: center; }
   .menu button small { color: var(--ink-3); margin-left: auto; }
 
   /* ---------- Modal ---------- */
-  .modal-back {
-    position: fixed; inset: 0; z-index: 60; background: rgba(10, 15, 20, 0.5);
-    display: grid; place-items: center;
-  }
+  .modal-back { position: fixed; inset: 0; z-index: 60; background: rgba(22, 50, 58, 0.5); display: grid; place-items: center; }
   .modal {
     width: min(560px, 92vw); background: var(--chrome); color: var(--ink);
-    border: 1px solid var(--card-border); border-radius: 12px; box-shadow: var(--shadow);
-    padding: 16px;
+    border: 1px solid var(--card-border); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 18px;
   }
-  .modal h3 { margin: 0 0 8px; font-size: 15px; }
+  .modal h3 { margin: 0 0 8px; font-family: var(--font-title); font-weight: 800; font-size: 16px; }
   .modal textarea {
     width: 100%; height: 200px; resize: vertical;
     font-family: var(--font-num); font-size: 12px;
     color: var(--ink); background: var(--canvas);
-    border: 1px solid var(--card-border); border-radius: 8px; padding: 8px;
+    border: 1px solid var(--card-border); border-radius: 10px; padding: 8px;
   }
-  .modal .mrow { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; align-items: center; }
+  .modal .mrow { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; align-items: center; }
   .modal .err { color: var(--danger); font-size: 12px; margin-right: auto; }
 </style>
 </head>
 <body>
 <div id="app">
   <header class="topbar">
-    <div class="brand"><strong>SOLV Funnel Lab</strong><span>funnel simulator</span></div>
-    <select id="templateSel" title="Load a funnel template">
-      <option value="solv">SOLV Languages — webinar → call</option>
-      <option value="2pap">De Prof à Pro — pub → appel</option>
-      <option value="optin">Simple opt-in → sales</option>
-      <option value="blank">Blank funnel</option>
-    </select>
-    <select id="currencySel" title="Currency">
+    <div class="brand">Funnel Lab<span class="dot">.</span></div>
+    <span class="hint-month">tout est mensuel ✦</span>
+    <div class="spacer"></div>
+    <select id="currencySel" title="Devise">
       <option value="€">EUR €</option>
       <option value="$">USD $</option>
       <option value="£">GBP £</option>
     </select>
-    <button class="btn" id="btnExport">Export</button>
-    <button class="btn" id="btnImport">Import</button>
-    <button class="btn" id="btnReset" title="Reset to the selected template">Reset</button>
-    <div class="spacer"></div>
-    <span class="hint-month">all numbers per month</span>
-    <button class="btn btn-sim" id="btnSim" title="Run a Monte-Carlo simulation using each step's range">⚗ Simulate</button>
+    <button class="btn" id="btnExport">Exporter</button>
+    <button class="btn" id="btnImport">Importer</button>
+    <button class="btn" id="btnReset" title="Remettre ce funnel à ses valeurs de départ">Réinitialiser</button>
+    <button class="btn btn-sim" id="btnSim" title="1 000 mois simulés avec les plages min et max de chaque étape">⚗ Simuler</button>
   </header>
+  <div class="infobar" id="infobar"></div>
   <div class="main">
+    <nav class="nav" id="funnelNav" aria-label="Choisir un funnel"></nav>
     <div class="board-wrap"><div class="board" id="board"></div></div>
     <aside class="sidebar" id="sidebar"></aside>
   </div>
@@ -377,78 +366,325 @@ const ICONS = {
   order: pageIcon('<rect x="8" y="14" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="17.5" x2="22" y2="17.5" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="1.3"/><rect x="10" y="27" width="10" height="3" rx="1" class="ic-accent"/>'),
   thankyou: pageIcon('<circle cx="15" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11.5 20.5l2.5 2.5 4.8-5.3" fill="none" stroke="var(--flow)" stroke-width="1.9" stroke-linecap="round"/>'),
   email: '<svg width="30" height="36" viewBox="0 0 30 36" aria-hidden="true"><rect x="4" y="9" width="22" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 10.5L15 19l10.5-8.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  chat: pageIcon('<path d="M8 14h14v9H14l-3.5 3.5V23H8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="18.5" r="1.1" class="ic-accent"/><circle cx="15.5" cy="18.5" r="1.1" fill="currentColor"/><circle cx="19" cy="18.5" r="1.1" fill="currentColor"/>'),
+  group: pageIcon('<circle cx="11.5" cy="17" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="19.5" cy="17" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 28c.9-3 2.8-4.6 5-4.6s4.1 1.6 5 4.6M14.5 28c.9-3 2.8-4.6 5-4.6 1.4 0 2.7.6 3.6 1.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'),
   page: pageIcon('<line x1="8" y1="14" x2="22" y2="14" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="1.4"/><line x1="8" y1="22" x2="16" y2="22" stroke="currentColor" stroke-width="1.4"/>')
 };
 
 /* Step kinds available in the "add step" menu */
 const KINDS = [
-  { icon: 'optin',    name: 'Opt-in / Landing page', rate: 20,  sales: false },
-  { icon: 'webinar',  name: 'Webinar / Video',       rate: 60,  sales: false },
-  { icon: 'survey',   name: 'Survey / Application',  rate: 80,  sales: false },
-  { icon: 'call',     name: 'Call booked',           rate: 10,  sales: false },
-  { icon: 'person',   name: 'Showed up to call',     rate: 70,  sales: false },
-  { icon: 'sales',    name: 'Sales page / Close',    rate: 5,   sales: true, price: 97 },
-  { icon: 'order',    name: 'Upsell / Order bump',   rate: 20,  sales: true, price: 47 },
-  { icon: 'email',    name: 'Email step',            rate: 40,  sales: false },
-  { icon: 'thankyou', name: 'Thank-you page',        rate: 100, sales: false },
-  { icon: 'page',     name: 'Custom step',           rate: 50,  sales: false }
+  { icon: 'optin',    name: 'Page opt-in / landing',  rate: 20,  sales: false },
+  { icon: 'webinar',  name: 'Webinaire / Vidéo',      rate: 60,  sales: false },
+  { icon: 'survey',   name: 'Sondage / Candidature',  rate: 80,  sales: false },
+  { icon: 'call',     name: 'Appel réservé',          rate: 10,  sales: false },
+  { icon: 'person',   name: 'Appel honoré',           rate: 70,  sales: false },
+  { icon: 'chat',     name: 'Message / DM',           rate: 30,  sales: false },
+  { icon: 'group',    name: 'Communauté',             rate: 25,  sales: false },
+  { icon: 'sales',    name: 'Page de vente / Close',  rate: 5,   sales: true, price: 97 },
+  { icon: 'order',    name: 'Upsell / Order bump',    rate: 20,  sales: true, price: 47 },
+  { icon: 'email',    name: 'Étape email',            rate: 40,  sales: false },
+  { icon: 'thankyou', name: 'Page de remerciement',   rate: 100, sales: false },
+  { icon: 'page',     name: 'Étape libre',            rate: 50,  sales: false }
 ];
 
-/* ================= Templates ================= */
-/* SOLV defaults come from the "Main Funnel Numbers" Coda page:
-   weekly averages ≈ CPC €0.65, CPL €6, landing conv 9.5%, webinar show-up 75%,
-   call show-up 70%, close 25%, ≈ €2,000 per sale. Ranges from "Typical Numbers". */
+/* ================= Templates =================
+   solv : moyennes réelles du doc Coda "Main Funnel Numbers".
+   2pap : doc "État funnel pub" du 17 août 2026 (funnel n°2, réservation directe).
+   db01..db24 : les 24 funnels d'acquisition_database.csv, modélisés en chaînes
+   de pages avec des taux calés sur les CPL / CAC / conversions de la base. */
+function T(name, visitors, cpc, unit) { return { type: 'traffic', icon: 'traffic', name: name, visitors: visitors, cpc: cpc, vari: 20, unit: unit || null }; }
+function P(icon, name, rate, min, max) { return { type: 'page', icon: icon, name: name, rate: rate, min: min, max: max }; }
+function S(icon, name, rate, min, max, price) { return { type: 'sales', icon: icon, name: name, rate: rate, min: min, max: max, price: price }; }
+
 const TEMPLATES = {
-  solv: {
-    currency: '€',
-    costs: { feePct: 1.5, perSale: 0, fixed: 0 },
-    steps: [
-      { type: 'traffic', icon: 'traffic', name: 'YouTube Ads', visitors: 1250, cpc: 0.65, vari: 15 },
-      { type: 'page', icon: 'optin',   name: 'Webinar Registration', rate: 9.5, min: 5,  max: 15 },
-      { type: 'page', icon: 'webinar', name: 'Attended Webinar',     rate: 75,  min: 50, max: 90 },
-      { type: 'page', icon: 'call',    name: 'Booked a Call',        rate: 12,  min: 8,  max: 15 },
-      { type: 'page', icon: 'person',  name: 'Showed Up to Call',    rate: 70,  min: 50, max: 80 },
-      { type: 'sales', icon: 'sales',  name: 'New Student — 30/90 Challenge', rate: 25, min: 15, max: 40, price: 2000 }
-    ]
-  },
-  /* 2PaP defaults from the "État funnel pub" doc of 17 Aug 2026 (funnel n°2,
-     réservation directe): €500/mo cap at €20-25/day, expected 8-16 booked
-     calls/mo (≈€31-62 per booking), show-up target ~65% (72h window + 4
-     reminders), 1-2 sales/mo median at €2,000. */
-  '2pap': {
-    currency: '€',
-    costs: { feePct: 2, perSale: 0, fixed: 0 },
-    steps: [
-      { type: 'traffic', icon: 'traffic', name: 'Pub Meta (FB + IG)', visitors: 200, cpc: 2.5, vari: 25 },
-      { type: 'page', icon: 'optin',    name: 'Page A — /plan-action',      rate: 95,  min: 85, max: 100 },
-      { type: 'page', icon: 'call',     name: 'Réserve un appel (Calendly)', rate: 7,   min: 4,  max: 10 },
-      { type: 'page', icon: 'thankyou', name: 'Page B — /appel-confirmé',   rate: 100, min: 100, max: 100 },
-      { type: 'page', icon: 'person',   name: 'Appel honoré (45 min)',      rate: 65,  min: 50, max: 80 },
-      { type: 'sales', icon: 'sales',   name: 'Vente — De Prof à Pro',      rate: 20,  min: 10, max: 35, price: 2000 }
-    ]
-  },
-  optin: {
-    currency: '€',
-    costs: { feePct: 2.9, perSale: 0, fixed: 0 },
-    steps: [
-      { type: 'traffic', icon: 'traffic', name: 'Facebook Ads', visitors: 2000, cpc: 0.5, vari: 20 },
-      { type: 'page', icon: 'optin', name: 'Landing Page', rate: 30, min: 20, max: 40 },
-      { type: 'sales', icon: 'sales', name: 'Mini-course Sales Page', rate: 5, min: 2, max: 8, price: 97 }
-    ]
-  },
-  blank: {
-    currency: '€',
-    costs: { feePct: 0, perSale: 0, fixed: 0 },
-    steps: [
-      { type: 'traffic', icon: 'traffic', name: 'Traffic Source', visitors: 1000, cpc: 1, vari: 15 },
-      { type: 'page', icon: 'optin', name: 'Landing Page', rate: 20, min: 12, max: 28 }
-    ]
-  }
+  solv: { currency: '€', costs: { feePct: 1.5, perSale: 0, fixed: 0 }, steps: [
+    { type: 'traffic', icon: 'traffic', name: 'YouTube Ads', visitors: 1250, cpc: 0.65, vari: 15, unit: 'clics/mois' },
+    P('optin', 'Inscription webinaire', 9.5, 5, 15),
+    P('webinar', 'Présent au webinaire', 75, 50, 90),
+    P('call', 'Appel réservé', 12, 8, 15),
+    P('person', 'Appel honoré', 70, 50, 80),
+    S('sales', 'Nouvel élève : 30/90 Challenge', 25, 15, 40, 2000)
+  ]},
+  '2pap': { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    { type: 'traffic', icon: 'traffic', name: 'Pub Meta (FB + IG)', visitors: 200, cpc: 2.5, vari: 25, unit: 'clics/mois' },
+    P('optin', 'Page A : /plan-action', 95, 85, 100),
+    P('call', 'Réserve un appel (Calendly)', 7, 4, 10),
+    P('thankyou', 'Page B : /appel-confirmé', 100, 100, 100),
+    P('person', 'Appel honoré (45 min)', 65, 50, 80),
+    S('sales', 'Vente : De Prof à Pro', 20, 10, 35, 2000)
+  ]},
+  db01: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Pub Meta (formulaire natif)', 375, 0.8, 'clics/mois'),
+    P('optin', 'Formulaire Meta rempli', 4, 2.5, 6),
+    P('chat', 'Conversation WhatsApp', 70, 50, 85),
+    P('call', 'Appel réservé', 35, 20, 50),
+    P('person', 'Appel honoré', 75, 60, 85),
+    S('sales', 'Vente accompagnement', 40, 25, 55, 1500)
+  ]},
+  db02: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Pub Meta', 150, 2, 'clics/mois'),
+    P('optin', 'Inscription webinaire', 15, 8, 25),
+    P('webinar', 'Présent au webinaire', 45, 35, 60),
+    P('webinar', 'Reste jusqu’au pitch', 60, 40, 75),
+    P('call', 'Appel réservé', 25, 15, 35),
+    P('person', 'Appel honoré', 75, 60, 85),
+    S('sales', 'Vente programme', 45, 25, 55, 2000)
+  ]},
+  db03: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Pub YouTube', 167, 1.2, 'clics/mois'),
+    P('optin', 'Inscription webinaire', 10, 6, 18),
+    P('webinar', 'Présent au webinaire', 50, 35, 65),
+    P('call', 'Appel réservé', 25, 15, 35),
+    P('person', 'Appel honoré', 75, 60, 85),
+    S('sales', 'Vente programme', 45, 25, 55, 2000)
+  ]},
+  db04: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Pub Meta', 308, 1.3, 'clics/mois'),
+    P('webinar', 'VSL vue à plus de 50 %', 40, 25, 55),
+    P('survey', 'Candidature qualifiée', 5, 3, 8),
+    P('person', 'Appel honoré', 70, 55, 85),
+    S('sales', 'Vente programme', 22, 12, 35, 2000)
+  ]},
+  db05: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Pub Meta', 214, 0.7, 'clics/mois'),
+    P('optin', 'Opt-in lead magnet', 12, 8, 20),
+    P('email', 'Emails : clic vers le RDV', 12, 6, 18),
+    P('person', 'Appel honoré', 70, 55, 85),
+    S('sales', 'Vente programme', 30, 18, 40, 1500)
+  ]},
+  db06: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Google Search Ads', 91, 5.5, 'clics/mois'),
+    P('call', 'RDV réservé depuis la LP', 7, 4, 11),
+    P('person', 'Appel honoré', 70, 55, 85),
+    S('sales', 'Vente programme', 15, 8, 25, 2000)
+  ]},
+  db07: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Groupes FB : interactions', 300, 0, 'interactions/mois'),
+    P('chat', 'DM engagé', 15, 8, 25),
+    P('call', 'Appel accepté (15-20 min)', 20, 10, 30),
+    P('person', 'Appel honoré', 85, 70, 95),
+    S('sales', 'Vente pack', 60, 45, 80, 400)
+  ]},
+  db08: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Auditeurs touchés', 2000, 0, 'auditeurs/mois'),
+    P('optin', 'Visite la page cadeau', 3, 1, 6),
+    P('email', 'Opt-in email', 25, 15, 40),
+    P('call', 'RDV réservé', 30, 15, 40),
+    P('person', 'Appel honoré', 85, 70, 95),
+    S('sales', 'Vente programme', 40, 25, 55, 2000)
+  ]},
+  db09: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Vues du Reel boosté', 6000, 0.01, 'vues/mois'),
+    P('chat', 'Commentaire mot-clé', 2, 1, 4),
+    P('chat', 'DM : réponse', 30, 25, 40),
+    P('call', 'Appel qualifié', 20, 10, 30),
+    S('sales', 'Vente offre', 50, 35, 75, 300)
+  ]},
+  db10: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Vues YouTube', 4000, 0, 'vues/mois'),
+    P('optin', 'Clic lien description', 4, 2, 7),
+    P('email', 'Opt-in email', 20, 10, 30),
+    P('call', 'RDV réservé', 10, 5, 15),
+    P('person', 'Appel honoré', 80, 65, 90),
+    S('sales', 'Vente programme', 35, 20, 50, 1500)
+  ]},
+  db11: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Vues pub IG', 20000, 0.005, 'vues/mois'),
+    P('group', 'Nouveau follower', 2.5, 1.5, 4),
+    P('chat', 'Conversation ManyChat', 8, 4, 15),
+    S('sales', 'Abonnement (low ticket)', 4, 2, 8, 97)
+  ]},
+  db12: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Demandes de connexion', 320, 0, 'demandes/mois'),
+    P('group', 'Connexion acceptée', 30, 22, 40),
+    P('chat', 'Réponse à la séquence', 12, 6, 20),
+    P('call', 'RDV réservé', 25, 15, 40),
+    P('person', 'Appel honoré', 80, 65, 90),
+    S('sales', 'Vente programme', 30, 18, 45, 1800)
+  ]},
+  db13: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Emails envoyés', 600, 0, 'emails/mois'),
+    P('email', 'Réponse reçue', 3.5, 1.5, 8),
+    P('call', 'RDV réservé', 20, 10, 35),
+    P('person', 'Appel honoré', 75, 60, 85),
+    S('sales', 'Vente programme', 12, 5, 20, 1200)
+  ]},
+  db14: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('DM envoyés (manuel)', 200, 0, 'DMs/mois'),
+    P('chat', 'Réponse reçue', 10, 5, 15),
+    P('chat', 'Conversation qualifiée', 40, 25, 60),
+    P('call', 'RDV réservé', 30, 15, 45),
+    P('person', 'Appel honoré', 80, 65, 90),
+    S('sales', 'Vente programme', 45, 25, 60, 1200)
+  ]},
+  db15: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Prospects chauds en cours', 40, 0, 'prospects/mois'),
+    P('chat', 'Permission accordée', 60, 40, 75),
+    P('webinar', 'Loom regardé', 75, 55, 90),
+    P('chat', 'Réponse positive', 20, 10, 30),
+    P('call', 'RDV réservé', 60, 40, 80),
+    P('person', 'Appel honoré', 85, 70, 95),
+    S('sales', 'Vente programme', 35, 20, 50, 2000)
+  ]},
+  db16: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Liste opt-in touchée', 250, 0, 'contacts/mois'),
+    P('chat', 'Message ouvert', 80, 65, 90),
+    P('chat', 'Réponse ou clic', 15, 8, 25),
+    P('call', 'RDV réservé', 20, 10, 35),
+    P('person', 'Appel honoré', 85, 70, 95),
+    S('sales', 'Vente offre', 25, 12, 40, 400)
+  ]},
+  db17: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Visiteurs page challenge', 500, 0.1, 'visiteurs/mois'),
+    S('sales', 'Inscription challenge (payante)', 4, 2, 7, 197),
+    P('survey', 'Complète le challenge', 75, 60, 85),
+    P('call', 'Appel premium accepté', 35, 20, 50),
+    P('person', 'Appel honoré', 85, 70, 95),
+    S('sales', 'Vente programme', 25, 18, 30, 2000)
+  ]},
+  db18: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Visiteurs communauté', 200, 0, 'visiteurs/mois'),
+    P('group', 'Rejoint (gratuit)', 25, 15, 40),
+    P('group', 'Actif à 30 jours', 40, 25, 60),
+    S('sales', 'Challenge payant interne', 25, 22, 35, 197),
+    P('call', 'Appel programme', 40, 25, 55),
+    S('sales', 'Vente programme', 30, 20, 45, 2000)
+  ]},
+  db19: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Clients sollicités', 20, 0, 'clients/mois'),
+    P('chat', 'Accepte de référer', 35, 25, 50),
+    P('email', 'Référence transmise', 50, 30, 70),
+    P('call', 'RDV du référé', 60, 40, 80),
+    P('person', 'Appel honoré', 90, 75, 95),
+    S('sales', 'Vente programme', 45, 30, 60, 1800)
+  ]},
+  db20: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Leads partenaires reçus', 8, 0, 'leads/mois'),
+    P('call', 'RDV accepté', 70, 50, 85),
+    P('person', 'Appel honoré', 85, 70, 95),
+    S('sales', 'Vente programme', 35, 20, 50, 1800)
+  ]},
+  db21: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Trafic (liste, SEO)', 300, 0, 'visiteurs/mois'),
+    P('optin', 'Inscription au replay', 25, 15, 40),
+    P('webinar', 'Regarde plus de 50 %', 45, 30, 60),
+    P('call', 'RDV réservé', 15, 8, 22),
+    P('person', 'Appel honoré', 75, 60, 85),
+    S('sales', 'Vente programme', 35, 20, 50, 2000)
+  ]},
+  db22: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Trafic vers l’opt-in', 250, 0.2, 'visiteurs/mois'),
+    P('optin', 'Opt-in série 4 vidéos', 30, 20, 45),
+    P('webinar', 'Regarde la vidéo 4', 25, 15, 40),
+    S('sales', 'Achat programme', 15, 8, 25, 1500)
+  ]},
+  db23: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Pub Meta / YouTube', 333, 0.9, 'clics/mois'),
+    S('sales', 'Achat atelier (SLO)', 2, 1, 3.5, 67),
+    S('order', 'Prend l’OTO', 18, 10, 25, 197),
+    P('call', 'Appel backend', 40, 20, 55),
+    P('person', 'Appel honoré', 80, 65, 90),
+    S('sales', 'Vente programme', 35, 20, 50, 2000)
+  ]},
+  db24: { currency: '€', costs: { feePct: 2, perSale: 0, fixed: 0 }, steps: [
+    T('Ads multi-canal (newsletters, Meta)', 300, 0.5, 'clics/mois'),
+    P('optin', 'Opt-in guide gratuit', 35, 20, 50),
+    S('sales', 'Achat "short sword"', 3, 1, 6, 67),
+    P('call', 'Appel programme', 25, 12, 40),
+    P('person', 'Appel honoré', 80, 65, 90),
+    S('sales', 'Vente programme', 30, 18, 45, 1500)
+  ]},
+  optin: { currency: '€', costs: { feePct: 2.9, perSale: 0, fixed: 0 }, steps: [
+    T('Pub Facebook', 2000, 0.5, 'clics/mois'),
+    P('optin', 'Landing page', 30, 20, 40),
+    S('sales', 'Page de vente mini-cours', 5, 2, 8, 97)
+  ]},
+  blank: { currency: '€', costs: { feePct: 0, perSale: 0, fixed: 0 }, steps: [
+    T('Source de trafic', 1000, 1, 'clics/mois'),
+    P('optin', 'Landing page', 20, 12, 28)
+  ]}
 };
 
+/* Metadata from acquisition_database.csv, shown in the info strip.
+   cpl/cac in USD, ticket in EUR, hps = heures par vente. */
+const META = {
+  solv: { cat: 'mine', note: 'moyennes réelles Coda, funnel YT Ads' },
+  '2pap': { cat: 'mine', note: 'état du 17 août 2026, lancement du 20' },
+  db01: { cat: 'paid', conf: 'high', ticket: [500, 3000], cpl: [15, 35], cac: [150, 700], hps: [1.83, 4.83], cap: 50, t2c: true },
+  db02: { cat: 'paid', conf: 'high', ticket: [800, 5000], cpl: [10, 25], cac: [167, 1250], hps: [2.67, 11.5], cap: 30, t2c: true },
+  db03: { cat: 'paid', conf: 'medium', ticket: [800, 5000], cpl: [10, 25], cac: [125, 833], hps: [2.25, 8.17], cap: 30, t2c: true },
+  db04: { cat: 'paid', conf: 'medium', ticket: [800, 5000], cpl: [20, 60], cac: [400, 2000], hps: [2.0, 4.83], cap: 25, t2c: true },
+  db05: { cat: 'paid', conf: 'high', ticket: [500, 3000], cpl: [5, 15], cac: [83, 750], hps: [1.83, 9.0], cap: 40, t2c: true },
+  db06: { cat: 'paid', conf: 'high', ticket: [800, 5000], cpl: [50, 120], cac: [417, 2400], hps: [1.28, 3.17], cap: 25, t2c: true },
+  db07: { cat: 'organic', conf: 'high', ticket: [200, 500], cpl: null, cac: null, hps: [1.84, 6.5], cap: 10, t2c: true },
+  db08: { cat: 'organic', conf: 'medium', ticket: [800, 5000], cpl: null, cac: null, hps: [5.63, 31.5], cap: 8, t2c: false },
+  db09: { cat: 'hybrid', conf: 'medium', ticket: [100, 1000], cpl: [2, 8], cac: [13, 114], hps: [2.17, 8.64], cap: 30, t2c: false },
+  db10: { cat: 'organic', conf: 'medium', ticket: [500, 3000], cpl: null, cac: null, hps: [9.33, 60.0], cap: 15, t2c: true },
+  db11: { cat: 'paid', conf: 'high', ticket: [20, 297], cpl: [0.2, 0.4], cac: [40, 267], hps: [7.17, 56.56], cap: 50, t2c: false, counter: true },
+  db12: { cat: 'organic', conf: 'medium', ticket: [800, 3000], cpl: null, cac: null, hps: [3.72, 28.2], cap: 8, t2c: true },
+  db13: { cat: 'organic', conf: 'medium', ticket: [500, 2500], cpl: null, cac: null, hps: [4.94, 84.8], cap: 5, t2c: true },
+  db14: { cat: 'organic', conf: 'high', ticket: [200, 1500], cpl: null, cac: null, hps: [2.58, 23.7], cap: 8, t2c: false },
+  db15: { cat: 'organic', conf: 'medium', ticket: [800, 5000], cpl: null, cac: null, hps: [1.78, 8.17], cap: 10, t2c: true, multi: true },
+  db16: { cat: 'organic', conf: 'medium', ticket: [97, 800], cpl: null, cac: null, hps: [1.0, 9.33], cap: 15, t2c: false, nurt: true },
+  db17: { cat: 'hybrid', conf: 'high', ticket: [1500, 5000], cpl: null, cac: null, hps: [3.78, 21.5], cap: 20, t2c: true },
+  db18: { cat: 'organic', conf: 'medium', ticket: [1000, 3000], cpl: null, cac: null, hps: [4.33, 34.8], cap: 8, t2c: false },
+  db19: { cat: 'organic', conf: 'medium', ticket: [500, 3000], cpl: null, cac: null, hps: [1.06, 4.33], cap: 5, t2c: true },
+  db20: { cat: 'organic', conf: 'low', ticket: [800, 3000], cpl: null, cac: null, hps: [3.0, 16.5], cap: 8, t2c: true },
+  db21: { cat: 'hybrid', conf: 'medium', ticket: [800, 5000], cpl: [8, 20], cac: [133, 1000], hps: [1.58, 9.7], cap: 20, t2c: true },
+  db22: { cat: 'hybrid', conf: 'medium', ticket: [1000, 5000], cpl: [5, 15], cac: [83, 750], hps: [2.17, 18.5], cap: 25, t2c: true },
+  db23: { cat: 'paid', conf: 'medium', ticket: [1000, 3000], cpl: [15, 35], cac: [50, 200], hps: [1.58, 9.7], cap: 30, t2c: true },
+  db24: { cat: 'hybrid', conf: 'medium', ticket: [500, 3000], cpl: [3, 15], cac: [50, 500], hps: [1.83, 12.0], cap: 25, t2c: true },
+  optin: { cat: 'mine', note: 'modèle simple pour partir de zéro' },
+  blank: { cat: 'mine', note: 'funnel vierge' }
+};
+
+/* Funnel navigator: groups + display names */
+const NAV = [
+  { label: 'Mes funnels', items: [
+    ['solv', 'SOLV : webinaire → appel'],
+    ['2pap', '2PaP : pub → appel (20 août)']
+  ]},
+  { label: 'Payants', items: [
+    ['db01', 'Meta → WhatsApp'],
+    ['db02', 'Meta → Webinaire → Appel'],
+    ['db03', 'YouTube Ads → Webinaire'],
+    ['db04', 'Meta → VSL → Appel'],
+    ['db05', 'Lead magnet → Emails'],
+    ['db06', 'Google Search → Appel'],
+    ['db11', 'IG ManyChat (low ticket)'],
+    ['db23', 'SLO / Tripwire']
+  ]},
+  { label: 'Organiques', items: [
+    ['db07', 'Groupes Facebook'],
+    ['db08', 'Podcasts (invité)'],
+    ['db10', 'YouTube organique'],
+    ['db12', 'LinkedIn Sales Nav'],
+    ['db13', 'Cold email'],
+    ['db14', 'DM Instagram manuel'],
+    ['db15', 'Loom / Voice DM'],
+    ['db16', 'WhatsApp broadcast'],
+    ['db18', 'Communauté Skool'],
+    ['db19', 'Parrainage clients'],
+    ['db20', 'Partenariats']
+  ]},
+  { label: 'Hybrides', items: [
+    ['db09', 'Reels boostés + DM'],
+    ['db17', 'Challenge payant'],
+    ['db21', 'Webinaire evergreen'],
+    ['db22', 'Lancement 4 vidéos (PLF)'],
+    ['db24', 'Leadflow (build de liste)']
+  ]},
+  { label: 'Modèles', items: [
+    ['optin', 'Opt-in simple → vente'],
+    ['blank', 'Funnel vierge']
+  ]}
+];
+const NAV_NAMES = {};
+NAV.forEach(g => g.items.forEach(it => { NAV_NAMES[it[0]] = it[1]; }));
+
 /* ================= State ================= */
-/* One saved board per template, so the dropdown switches funnels without
-   losing edits. (Native confirm() is unavailable in sandboxed embeds.) */
+/* One saved board per funnel key, so switching is non-destructive.
+   (Native confirm() is unavailable in sandboxed embeds; in-app modal instead.) */
 const LS_PREFIX = 'solvFunnelLab.v2.';
 const LS_LAST = 'solvFunnelLab.last';
 const LS_LEGACY = 'solvFunnelLab.v1';
@@ -548,8 +784,8 @@ function computeSummary() {
     counts, adCost, revenue, products, buyers, totalSales, fees, delivery, fixed, totalCost,
     profit: revenue - totalCost,
     roas: adCost > 0 ? revenue / adCost : null,
-    cpl: leads > 0 ? adCost / leads : null,
-    cac: buyers > 0 ? adCost / buyers : null,
+    cpl: leads > 0 && adCost > 0 ? adCost / leads : (adCost > 0 ? null : null),
+    cac: buyers > 0 && adCost > 0 ? adCost / buyers : null,
     aov: buyers > 0 ? revenue / buyers : null,
     epc: counts[0] > 0 ? revenue / counts[0] : null
   };
@@ -594,7 +830,7 @@ function runSimulation(runs) {
   runs = runs || 1000;
   const S = state.steps;
   const perStep = S.map(() => new Array(runs));
-  const profits = new Array(runs), revenues = new Array(runs), buyersArr = new Array(runs);
+  const profits = new Array(runs), revenues = new Array(runs), salesArr = new Array(runs);
   const t = S[0];
   const vari = clamp(num(t.vari), 0, 90) / 100;
   const v0 = Math.max(0, num(t.visitors)), cpc0 = Math.max(0, num(t.cpc));
@@ -624,10 +860,10 @@ function runSimulation(runs) {
     const cost = adCost + fees + delivery + Math.max(0, num(state.costs.fixed));
     profits[r] = revenue - cost;
     revenues[r] = revenue;
-    buyersArr[r] = totalSales;
+    salesArr[r] = totalSales;
   }
   const sortNum = a => a.slice().sort((x, y) => x - y);
-  const pf = sortNum(profits), rv = sortNum(revenues), by = sortNum(buyersArr);
+  const pf = sortNum(profits), rv = sortNum(revenues), by = sortNum(salesArr);
   simResults = {
     runs,
     profit:  { p10: percentile(pf, 0.1), p50: percentile(pf, 0.5), p90: percentile(pf, 0.9) },
@@ -645,28 +881,84 @@ function runSimulation(runs) {
 /* ================= Formatting ================= */
 function cur() { return state.currency || '€'; }
 function fmtPeople(n) {
-  if (!isFinite(n)) return '—';
-  if (n >= 100) return Math.round(n).toLocaleString('en-US');
-  if (n >= 10) return (Math.round(n * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  return (Math.round(n * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  if (!isFinite(n)) return '·';
+  if (n >= 100) return Math.round(n).toLocaleString('fr-FR');
+  return (Math.round(n * 10) / 10).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 function fmtMoney(n) {
-  if (n === null || !isFinite(n)) return '—';
+  if (n === null || !isFinite(n)) return '·';
   const neg = n < 0; const a = Math.abs(n);
-  const s = a >= 100 ? Math.round(a).toLocaleString('en-US')
-        : a.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return (neg ? '−' : '') + cur() + s;
+  const s = a >= 100 ? Math.round(a).toLocaleString('fr-FR')
+        : a.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (neg ? '−' : '') + s + ' ' + cur();
 }
-function fmtRatio(n) { return n === null || !isFinite(n) ? '—' : (Math.round(n * 100) / 100).toLocaleString('en-US'); }
+function fmtRatio(n) { return n === null || !isFinite(n) ? '·' : (Math.round(n * 100) / 100).toLocaleString('fr-FR'); }
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-/* ================= Board rendering ================= */
+/* ================= Rendering ================= */
 function render() {
+  renderNav();
+  renderInfobar();
   renderBoard();
   renderSidebar();
   recalc();
+}
+
+function renderNav() {
+  const nav = $('#funnelNav');
+  nav.innerHTML = NAV.map(g =>
+    '<div class="grp">' + esc(g.label) + '</div>'
+    + g.items.map(it => {
+      const key = it[0], m = META[key] || {};
+      const active = state.template === key;
+      return '<button data-key="' + key + '"' + (active ? ' class="active" aria-current="true"' : '') + '>'
+        + '<span class="fdot ' + (m.cat || 'mine') + '"></span>'
+        + esc(it[1])
+        + (m.counter ? '<span class="wmark" title="Contre-exemple documenté">⚠</span>' : '')
+        + '</button>';
+    }).join('')
+  ).join('');
+  $$('#funnelNav button').forEach(b => b.addEventListener('click', () => setFunnel(b.dataset.key)));
+}
+
+/* switching is non-destructive: each funnel keeps its own saved board */
+function setFunnel(key) {
+  if (!TEMPLATES[key] || key === state.template) return;
+  persist();
+  if (!restoreTpl(key)) loadTemplate(key);
+  $('#currencySel').value = state.currency;
+  scheduleSave(); render();
+}
+
+function frange(pair, unit) {
+  if (!pair) return null;
+  const a = pair[0], b = pair[1];
+  if (a === b) return fmtNum(a) + unit;
+  return fmtNum(a) + ' à ' + fmtNum(b) + unit;
+}
+function fmtNum(n) { return n.toLocaleString('fr-FR', { maximumFractionDigits: 2 }); }
+const CAT_FR = { paid: 'payant', organic: 'organique', hybrid: 'hybride', mine: '' };
+const CONF_FR = { high: 'confiance haute', medium: 'confiance moyenne', low: 'confiance faible' };
+const CONF_CLS = { high: 'organic', medium: 'hybrid', low: 'paid' };
+
+function renderInfobar() {
+  const key = state.template;
+  const m = META[key] || {};
+  let chips = '';
+  if (m.cat && m.cat !== 'mine') chips += '<span class="ichip ' + m.cat + '">' + CAT_FR[m.cat] + '</span>';
+  if (m.conf) chips += '<span class="ichip ' + CONF_CLS[m.conf] + '">' + CONF_FR[m.conf] + '</span>';
+  if (m.ticket) chips += '<span class="ichip">ticket ' + frange(m.ticket, ' €') + '</span>';
+  if (m.cpl) chips += '<span class="ichip">CPL cible ' + frange(m.cpl, ' $') + '</span>';
+  if (m.cac) chips += '<span class="ichip">CAC cible ' + frange(m.cac, ' $') + '</span>';
+  if (m.hps) chips += '<span class="ichip">' + frange(m.hps, ' h') + ' / vente</span>';
+  if (m.cap) chips += '<span class="ichip">cap ' + m.cap + ' /mois</span>';
+  if (m.counter) chips += '<span class="ichip warn">⚠ contre-exemple : lire avant d’investir</span>';
+  if (m.multi) chips += '<span class="ichip">multiplicateur : à combiner avec un autre funnel</span>';
+  if (m.nurt) chips += '<span class="ichip">nurturing : pas un canal d’acquisition froide</span>';
+  if (m.note) chips += '<span class="ichip">' + esc(m.note) + '</span>';
+  $('#infobar').innerHTML = '<span class="fname">' + esc(NAV_NAMES[key] || key) + '</span>' + chips;
 }
 
 function renderBoard() {
@@ -678,7 +970,7 @@ function renderBoard() {
   });
   const add = document.createElement('button');
   add.className = 'end-add';
-  add.title = 'Add a step at the end';
+  add.title = 'Ajouter une étape à la fin';
   add.textContent = '+';
   add.addEventListener('click', e => openMenu(e.clientX, e.clientY, state.steps.length));
   board.appendChild(add);
@@ -688,8 +980,8 @@ function connEl(s, i) {
   const el = document.createElement('div');
   el.className = 'conn';
   el.innerHTML = '<div class="line"></div><div class="dot"></div>'
-    + '<span class="rate"><input type="number" step="0.1" min="0" max="100" value="' + esc(s.rate) + '" aria-label="Conversion rate into ' + esc(s.name) + '"><span class="pct">%</span></span>'
-    + '<button class="addbtn" title="Insert a step here">+</button>';
+    + '<span class="rate"><input type="number" step="0.1" min="0" max="100" value="' + esc(s.rate) + '" aria-label="Taux de conversion vers ' + esc(s.name) + '"><span class="pct">%</span></span>'
+    + '<button class="addbtn" title="Insérer une étape ici">+</button>';
   const input = $('input', el);
   input.addEventListener('input', () => { s.rate = num(input.value); touch(); });
   input.addEventListener('change', () => { input.value = stepRate(s); });
@@ -705,34 +997,35 @@ function stepEl(s, i) {
   let tools = '';
   if (i > 0) {
     tools = '<div class="step-tools">'
-      + (i > 1 ? '<button class="mv-l" title="Move left">‹</button>' : '')
-      + (i < state.steps.length - 1 ? '<button class="mv-r" title="Move right">›</button>' : '')
-      + '<button class="del" title="Delete step">✕</button></div>';
+      + (i > 1 ? '<button class="mv-l" title="Déplacer à gauche">‹</button>' : '')
+      + (i < state.steps.length - 1 ? '<button class="mv-r" title="Déplacer à droite">›</button>' : '')
+      + '<button class="del" title="Supprimer l’étape">✕</button></div>';
   }
 
   let body = '';
   if (s.type === 'traffic') {
-    body = '<div class="frow"><label>Visitors / mo</label><input class="in-visitors" type="number" min="0" step="10" value="' + esc(s.visitors) + '"></div>'
-      + '<div class="frow"><label>Cost per click</label><input class="in-cpc" type="number" min="0" step="0.01" value="' + esc(s.cpc) + '"></div>'
-      + '<details class="adv"><summary>Simulation range</summary>'
-      + '<div class="frow"><label>Variability ±%</label><input class="in-vari" type="number" min="0" max="90" step="1" value="' + esc(s.vari == null ? '' : s.vari) + '"></div></details>';
+    body = '<div class="frow"><label>Volume / mois</label><input class="in-visitors" type="number" min="0" step="10" value="' + esc(s.visitors) + '"></div>'
+      + '<div class="frow"><label>Coût par clic</label><input class="in-cpc" type="number" min="0" step="0.01" value="' + esc(s.cpc) + '"></div>'
+      + '<details class="adv"><summary>Plage de simulation</summary>'
+      + '<div class="frow"><label>Variabilité ±%</label><input class="in-vari" type="number" min="0" max="90" step="1" value="' + esc(s.vari == null ? '' : s.vari) + '"></div></details>';
   } else {
     const mn = s.min == null ? '' : s.min, mx = s.max == null ? '' : s.max;
     const price = s.type === 'sales'
-      ? '<div class="frow"><label>Price</label><input class="in-price" type="number" min="0" step="1" value="' + esc(s.price) + '"></div>' : '';
+      ? '<div class="frow"><label>Prix</label><input class="in-price" type="number" min="0" step="1" value="' + esc(s.price) + '"></div>' : '';
     body = price
-      + '<details class="adv"><summary>Simulation range</summary>'
-      + '<div class="frow"><label>Rate min–max %</label><span>'
-      + '<input class="in-min" type="number" min="0" max="100" step="0.5" value="' + esc(mn) + '" aria-label="Minimum rate"> – '
-      + '<input class="in-max" type="number" min="0" max="100" step="0.5" value="' + esc(mx) + '" aria-label="Maximum rate">'
+      + '<details class="adv"><summary>Plage de simulation</summary>'
+      + '<div class="frow"><label>Taux min et max %</label><span>'
+      + '<input class="in-min" type="number" min="0" max="100" step="0.5" value="' + esc(mn) + '" aria-label="Taux minimum"> – '
+      + '<input class="in-max" type="number" min="0" max="100" step="0.5" value="' + esc(mx) + '" aria-label="Taux maximum">'
       + '</span></div></details>';
   }
 
+  const unit = s.type === 'sales' ? 'ventes/mois' : (i === 0 ? (s.unit || 'clics/mois') : '/mois');
   el.innerHTML = tools
     + '<div class="step-head"><span class="step-icon">' + (ICONS[s.icon] || ICONS.page) + '</span>'
-    + '<input class="step-name" value="' + esc(s.name) + '" aria-label="Step name"></div>'
+    + '<input class="step-name" value="' + esc(s.name) + '" aria-label="Nom de l’étape"></div>'
     + '<div class="step-body">' + body + '</div>'
-    + '<div class="step-count"><span class="big"><span class="cnt">0</span><span class="unit">' + (s.type === 'sales' ? 'sales/mo' : (i === 0 ? 'clicks/mo' : '/mo')) + '</span></span>'
+    + '<div class="step-count"><span class="big"><span class="cnt">0</span><span class="unit">' + esc(unit) + '</span></span>'
     + '<span class="simrange" hidden></span>'
     + '<div class="cap"></div>'
     + (s.type === 'sales' ? '<div class="money"></div>' : '')
@@ -778,12 +1071,12 @@ function recalc() {
     $('.cnt', el).textContent = fmtPeople(n);
     const cap = $('.cap', el);
     if (idx === 0) {
-      cap.textContent = 'ad spend ' + fmtMoney(sum.adCost);
+      cap.textContent = 'dépense pub ' + fmtMoney(sum.adCost);
     } else {
-      cap.textContent = 'of ' + fmtPeople(sum.counts[idx - 1]) + ' · ' + stepRate(s) + '%';
+      cap.textContent = 'sur ' + fmtPeople(sum.counts[idx - 1]) + ' · ' + stepRate(s) + ' %';
     }
     if (s.type === 'sales') {
-      $('.money', el).textContent = fmtMoney(n * Math.max(0, num(s.price))) + ' /mo';
+      $('.money', el).textContent = fmtMoney(n * Math.max(0, num(s.price))) + ' /mois';
     }
     const sr = $('.simrange', el);
     if (simResults && simResults.perStep[idx]) {
@@ -802,28 +1095,28 @@ function recalc() {
 function renderSidebar() {
   const sb = $('#sidebar');
   sb.innerHTML =
-    '<details class="sb-section" open><summary>Products</summary><div class="sb-note">(monthly revenue)</div><div class="sb-rows" id="sbProducts"></div></details>'
-    + '<details class="sb-section" open><summary>Traffic</summary><div class="sb-note">(monthly visitors)</div><div class="sb-rows" id="sbTraffic"></div></details>'
-    + '<details class="sb-section" open><summary>Expenses</summary><div class="sb-note">(monthly expenses)</div><div class="sb-rows" id="sbExpenses">'
-    +   '<div class="sb-row"><span class="k">Traffic cost</span><span class="v" id="expTraffic"></span></div>'
-    +   '<div class="sb-row"><span class="k">Merchant fee %</span><span><input id="inFee" type="number" min="0" max="100" step="0.1" value="' + esc(state.costs.feePct) + '"></span></div>'
-    +   '<div class="sb-row"><span class="k">→ fees</span><span class="v" id="expFees"></span></div>'
-    +   '<div class="sb-row"><span class="k">Delivery / sale</span><span><input id="inPerSale" type="number" min="0" step="1" value="' + esc(state.costs.perSale) + '"></span></div>'
-    +   '<div class="sb-row"><span class="k">→ delivery</span><span class="v" id="expDelivery"></span></div>'
-    +   '<div class="sb-row"><span class="k">Fixed costs</span><span><input id="inFixed" type="number" min="0" step="10" value="' + esc(state.costs.fixed) + '"></span></div>'
+    '<details class="sb-section" open><summary>Produits</summary><div class="sb-note">(revenu mensuel)</div><div class="sb-rows" id="sbProducts"></div></details>'
+    + '<details class="sb-section" open><summary>Trafic</summary><div class="sb-note">(volume mensuel)</div><div class="sb-rows" id="sbTraffic"></div></details>'
+    + '<details class="sb-section" open><summary>Dépenses</summary><div class="sb-note">(dépenses mensuelles)</div><div class="sb-rows" id="sbExpenses">'
+    +   '<div class="sb-row"><span class="k">Coût du trafic</span><span class="v" id="expTraffic"></span></div>'
+    +   '<div class="sb-row"><span class="k">Frais bancaires %</span><span><input id="inFee" type="number" min="0" max="100" step="0.1" value="' + esc(state.costs.feePct) + '"></span></div>'
+    +   '<div class="sb-row"><span class="k">→ frais</span><span class="v" id="expFees"></span></div>'
+    +   '<div class="sb-row"><span class="k">Livraison / vente</span><span><input id="inPerSale" type="number" min="0" step="1" value="' + esc(state.costs.perSale) + '"></span></div>'
+    +   '<div class="sb-row"><span class="k">→ livraison</span><span class="v" id="expDelivery"></span></div>'
+    +   '<div class="sb-row"><span class="k">Coûts fixes</span><span><input id="inFixed" type="number" min="0" step="10" value="' + esc(state.costs.fixed) + '"></span></div>'
     +   '<div class="sb-row total"><span class="k">Total</span><span class="v" id="expTotal"></span></div>'
     + '</div></details>'
-    + '<details class="sb-section" open><summary>Summary</summary>'
-    +   '<div class="profit-hero"><div class="label">Monthly profit</div><div class="num" id="sumProfit"></div></div>'
+    + '<details class="sb-section" open><summary>Résumé</summary>'
+    +   '<div class="profit-hero"><div class="label">Profit mensuel</div><div class="num" id="sumProfit"></div></div>'
     +   '<div class="kpi-grid">'
-    +     '<div class="kpi"><div class="kk">Revenue</div><div class="kv" id="sumRevenue"></div></div>'
-    +     '<div class="kpi"><div class="kk">Costs</div><div class="kv" id="sumCosts"></div></div>'
+    +     '<div class="kpi"><div class="kk">Revenu</div><div class="kv" id="sumRevenue"></div></div>'
+    +     '<div class="kpi"><div class="kk">Coûts</div><div class="kv" id="sumCosts"></div></div>'
     +     '<div class="kpi"><div class="kk">ROAS</div><div class="kv" id="sumRoas"></div></div>'
     +     '<div class="kpi"><div class="kk">EPC</div><div class="kv" id="sumEpc"></div></div>'
     +     '<div class="kpi"><div class="kk">CPL</div><div class="kv" id="sumCpl"></div></div>'
     +     '<div class="kpi"><div class="kk">CAC</div><div class="kv" id="sumCac"></div></div>'
-    +     '<div class="kpi"><div class="kk">AOV</div><div class="kv" id="sumAov"></div></div>'
-    +     '<div class="kpi"><div class="kk">Sales / mo</div><div class="kv" id="sumSales"></div></div>'
+    +     '<div class="kpi"><div class="kk">Panier moyen</div><div class="kv" id="sumAov"></div></div>'
+    +     '<div class="kpi"><div class="kk">Ventes / mois</div><div class="kv" id="sumSales"></div></div>'
     +   '</div>'
     + '</details>'
     + '<details class="sb-section" open><summary>Simulation</summary><div id="simPanel"></div></details>';
@@ -839,7 +1132,7 @@ function renderProducts() {
   if (!box) return;
   const sum = computeSummary();
   if (!sum.products.length) {
-    box.innerHTML = '<div class="sb-row"><span class="k">No sales step yet — add one with +</span></div>';
+    box.innerHTML = '<div class="sb-row"><span class="k">Pas encore d’étape de vente : ajoute-la avec +</span></div>';
     return;
   }
   const maxR = Math.max.apply(null, sum.products.map(p => p.revenue).concat([1]));
@@ -857,7 +1150,7 @@ function renderTrafficRows(sum) {
   box.innerHTML =
     '<div class="sb-row"><span class="k">' + esc(t.name) + '</span><span class="v">' + fmtPeople(num(t.visitors)) + '</span></div>'
     + '<div class="sb-row"><span class="k">CPC</span><span class="v">' + fmtMoney(num(t.cpc)) + '</span></div>'
-    + '<div class="sb-row total"><span class="k">Ad spend</span><span class="v">' + fmtMoney(sum.adCost) + '</span></div>';
+    + '<div class="sb-row total"><span class="k">Dépense pub</span><span class="v">' + fmtMoney(sum.adCost) + '</span></div>';
 }
 
 function renderExpenseVals(sum) {
@@ -875,7 +1168,7 @@ function renderSummaryVals(sum) {
   p.className = 'num ' + (sum.profit >= 0 ? 'pos' : 'neg');
   $('#sumRevenue').textContent = fmtMoney(sum.revenue);
   $('#sumCosts').textContent = fmtMoney(sum.totalCost);
-  $('#sumRoas').textContent = sum.roas === null ? '—' : fmtRatio(sum.roas) + '×';
+  $('#sumRoas').textContent = sum.roas === null ? '·' : fmtRatio(sum.roas) + '×';
   $('#sumEpc').textContent = fmtMoney(sum.epc);
   $('#sumCpl').textContent = fmtMoney(sum.cpl);
   $('#sumCac').textContent = fmtMoney(sum.cac);
@@ -887,24 +1180,24 @@ function renderSimPanel() {
   const box = $('#simPanel');
   if (!box) return;
   if (!simResults) {
-    box.innerHTML = '<div class="sim-empty">Hit <b>⚗ Simulate</b> to run 1,000 Monte-Carlo months using each step’s min–max range. Results appear here (and under each step).</div>';
+    box.innerHTML = '<div class="sim-empty">Clique <b>⚗ Simuler</b> pour lancer 1 000 mois de Monte-Carlo avec les plages min et max de chaque étape. Les résultats s’affichent ici et sous chaque étape.</div>';
     return;
   }
   const R = simResults;
   const pct = Math.round(R.chance * 100);
   box.innerHTML =
     '<div class="sim-res">'
-    + '<div class="chance">Profitable months: <b style="color:' + (pct >= 50 ? 'var(--flow)' : 'var(--danger)') + '">' + pct + '%</b> of ' + R.runs.toLocaleString('en-US') + ' runs</div>'
-    + '<table><tr><th></th><th>P10</th><th>median</th><th>P90</th></tr>'
+    + '<div class="chance">Mois profitables : <b style="color:' + (pct >= 50 ? 'var(--flow)' : 'var(--accent)') + '">' + pct + ' %</b> sur ' + R.runs.toLocaleString('fr-FR') + ' tirages</div>'
+    + '<table><tr><th></th><th>P10</th><th>médiane</th><th>P90</th></tr>'
     + '<tr><td>Profit</td><td>' + fmtMoney(R.profit.p10) + '</td><td>' + fmtMoney(R.profit.p50) + '</td><td>' + fmtMoney(R.profit.p90) + '</td></tr>'
-    + '<tr><td>Revenue</td><td>' + fmtMoney(R.revenue.p10) + '</td><td>' + fmtMoney(R.revenue.p50) + '</td><td>' + fmtMoney(R.revenue.p90) + '</td></tr>'
-    + '<tr><td>Sales</td><td>' + fmtPeople(R.buyers.p10) + '</td><td>' + fmtPeople(R.buyers.p50) + '</td><td>' + fmtPeople(R.buyers.p90) + '</td></tr>'
+    + '<tr><td>Revenu</td><td>' + fmtMoney(R.revenue.p10) + '</td><td>' + fmtMoney(R.revenue.p50) + '</td><td>' + fmtMoney(R.revenue.p90) + '</td></tr>'
+    + '<tr><td>Ventes</td><td>' + fmtPeople(R.buyers.p10) + '</td><td>' + fmtPeople(R.buyers.p50) + '</td><td>' + fmtPeople(R.buyers.p90) + '</td></tr>'
     + '</table>'
     + histogramSVG(R.profits)
     + '</div>';
 }
 
-/* Profit distribution histogram: red below zero, green above. */
+/* Profit distribution histogram: coral below zero, turquoise above. */
 function histogramSVG(sorted) {
   if (!sorted.length) return '';
   const W = 276, H = 74, BINS = 26;
@@ -922,7 +1215,7 @@ function histogramSVG(sorted) {
     const h = Math.round((H - 4) * bins[i] / peak);
     if (!h) continue;
     const center = min + (i + 0.5) / BINS * span;
-    const col = center < 0 ? 'var(--danger)' : 'var(--flow)';
+    const col = center < 0 ? 'var(--accent)' : 'var(--flow)';
     bars += '<rect x="' + (i * bw + 1).toFixed(1) + '" y="' + (H - h) + '" width="' + (bw - 2).toFixed(1) + '" height="' + h + '" rx="2" fill="' + col + '"/>';
   }
   let zeroLine = '';
@@ -930,9 +1223,9 @@ function histogramSVG(sorted) {
     const zx = ((0 - min) / span * W).toFixed(1);
     zeroLine = '<line x1="' + zx + '" y1="0" x2="' + zx + '" y2="' + H + '" stroke="var(--panel-ink-2)" stroke-width="1" stroke-dasharray="2 3"/>';
   }
-  return '<svg class="histo" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Profit distribution across simulated months">'
+  return '<svg class="histo" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Distribution du profit sur les mois simulés">'
     + bars + zeroLine + '</svg>'
-    + '<div class="histo-cap"><span>' + fmtMoney(min) + '</span><span>profit / mo</span><span>' + fmtMoney(max) + '</span></div>';
+    + '<div class="histo-cap"><span>' + fmtMoney(min) + '</span><span>profit / mois</span><span>' + fmtMoney(max) + '</span></div>';
 }
 
 /* ================= Add-step menu ================= */
@@ -944,7 +1237,7 @@ function openMenu(x, y, insertAt) {
   menuEl.className = 'menu';
   menuEl.innerHTML = KINDS.map((k, i) =>
     '<button data-k="' + i + '"><span class="mi">' + ICONS[k.icon] + '</span>' + esc(k.name)
-    + (k.sales ? '<small>' + cur() + k.price + '</small>' : '<small>' + k.rate + '%</small>') + '</button>'
+    + (k.sales ? '<small>' + k.price + ' ' + cur() + '</small>' : '<small>' + k.rate + ' %</small>') + '</button>'
   ).join('');
   document.body.appendChild(menuEl);
   const r = menuEl.getBoundingClientRect();
@@ -969,7 +1262,7 @@ function onDocClickMenu(e) {
   if (menuEl && !menuEl.contains(e.target)) { closeMenu(); document.removeEventListener('click', onDocClickMenu); }
 }
 
-/* ================= Modals (export / import) ================= */
+/* ================= Modals (export / import / confirm) ================= */
 function modal(title, bodyHTML, actions) {
   const back = document.createElement('div');
   back.className = 'modal-back';
@@ -980,56 +1273,54 @@ function modal(title, bodyHTML, actions) {
   document.body.appendChild(back);
   return back;
 }
+function appConfirm(msg, onOk) {
+  const back = modal('Tu es sûr ?', '<p style="margin:4px 0 0">' + esc(msg) + '</p>',
+    '<button class="btn" data-a="ok">Oui</button><button class="btn" data-a="close">Annuler</button>');
+  $('[data-a="close"]', back).addEventListener('click', () => back.remove());
+  $('[data-a="ok"]', back).addEventListener('click', () => { back.remove(); onOk(); });
+}
 function doExport() {
   const json = JSON.stringify(state, null, 2);
-  const back = modal('Export funnel (JSON)',
+  const back = modal('Exporter le funnel (JSON)',
     '<textarea readonly>' + esc(json) + '</textarea>',
-    '<button class="btn" data-a="copy">Copy</button><button class="btn" data-a="close">Close</button>');
+    '<button class="btn" data-a="copy">Copier</button><button class="btn" data-a="close">Fermer</button>');
   const ta = $('textarea', back);
   $('[data-a="copy"]', back).addEventListener('click', () => {
     ta.select();
     if (navigator.clipboard) navigator.clipboard.writeText(json).catch(() => document.execCommand('copy'));
     else document.execCommand('copy');
-    $('[data-a="copy"]', back).textContent = 'Copied ✓';
+    $('[data-a="copy"]', back).textContent = 'Copié ✓';
   });
   $('[data-a="close"]', back).addEventListener('click', () => back.remove());
 }
-function appConfirm(msg, onOk) {
-  const back = modal('Are you sure?', '<p style="margin:4px 0 0">' + esc(msg) + '</p>',
-    '<button class="btn" data-a="ok">Yes</button><button class="btn" data-a="close">Cancel</button>');
-  $('[data-a="close"]', back).addEventListener('click', () => back.remove());
-  $('[data-a="ok"]', back).addEventListener('click', () => { back.remove(); onOk(); });
-}
-
 function doImport() {
-  const back = modal('Import funnel (paste JSON)',
+  const back = modal('Importer un funnel (colle le JSON)',
     '<textarea placeholder=\'{"steps": [...]}\'></textarea>',
-    '<button class="btn" data-a="load">Load</button><button class="btn" data-a="close">Close</button>');
+    '<button class="btn" data-a="load">Charger</button><button class="btn" data-a="close">Fermer</button>');
   $('[data-a="close"]', back).addEventListener('click', () => back.remove());
   $('[data-a="load"]', back).addEventListener('click', () => {
     try {
       const s = JSON.parse($('textarea', back).value);
-      if (!s || !Array.isArray(s.steps) || !s.steps.length) throw new Error('missing steps');
-      if (s.steps[0].type !== 'traffic') throw new Error('first step must be a traffic source');
+      if (!s || !Array.isArray(s.steps) || !s.steps.length) throw new Error('steps manquant');
+      if (s.steps[0].type !== 'traffic') throw new Error('la première étape doit être une source de trafic');
       s.steps.forEach(st => { if (!st.id) st.id = newId(); });
       normalizeCosts(s);
       normalizeCurrency(s);
-      s.template = TEMPLATES[s.template] ? s.template : $('#templateSel').value;
+      s.template = TEMPLATES[s.template] ? s.template : state.template;
       state = s;
       simResults = null;
-      $('#templateSel').value = state.template;
       $('#currencySel').value = state.currency;
       back.remove();
       scheduleSave(); render();
     } catch (err) {
-      $('.err', back).textContent = 'Invalid JSON: ' + err.message;
+      $('.err', back).textContent = 'JSON invalide : ' + err.message;
     }
   });
 }
 
 /* ================= Wiring ================= */
 function init() {
-  /* migrate the old single-board save into the per-template store */
+  /* migrate the old single-board save into the per-funnel store */
   try {
     const old = localStorage.getItem(LS_LEGACY);
     if (old) {
@@ -1044,21 +1335,12 @@ function init() {
   const last = localStorage.getItem(LS_LAST);
   const startKey = TEMPLATES[last] ? last : 'solv';
   if (!restoreTpl(startKey)) loadTemplate(startKey);
-  $('#templateSel').value = TEMPLATES[state.template] ? state.template : 'solv';
   $('#currencySel').value = ['€', '$', '£'].includes(state.currency) ? state.currency : '€';
 
-  /* switching is non-destructive: each template keeps its own saved board */
-  $('#templateSel').addEventListener('change', e => {
-    persist();
-    const key = e.target.value;
-    if (!restoreTpl(key)) loadTemplate(key);
-    $('#currencySel').value = state.currency;
-    scheduleSave(); render();
-  });
   $('#currencySel').addEventListener('change', e => { state.currency = e.target.value; touch(); });
   $('#btnReset').addEventListener('click', () => {
-    appConfirm('Reset this board to the "' + $('#templateSel').selectedOptions[0].textContent + '" template defaults? Your edits on this funnel will be lost.', () => {
-      loadTemplate($('#templateSel').value);
+    appConfirm('Remettre "' + (NAV_NAMES[state.template] || state.template) + '" à ses valeurs de départ ? Tes modifications sur ce funnel seront perdues.', () => {
+      loadTemplate(state.template);
       $('#currencySel').value = state.currency;
       scheduleSave(); render();
     });
