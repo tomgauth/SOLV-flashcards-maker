@@ -332,6 +332,7 @@
     <div class="brand"><strong>SOLV Funnel Lab</strong><span>funnel simulator</span></div>
     <select id="templateSel" title="Load a funnel template">
       <option value="solv">SOLV Languages — webinar → call</option>
+      <option value="2pap">De Prof à Pro — pub → appel</option>
       <option value="optin">Simple opt-in → sales</option>
       <option value="blank">Blank funnel</option>
     </select>
@@ -408,6 +409,22 @@ const TEMPLATES = {
       { type: 'page', icon: 'call',    name: 'Booked a Call',        rate: 12,  min: 8,  max: 15 },
       { type: 'page', icon: 'person',  name: 'Showed Up to Call',    rate: 70,  min: 50, max: 80 },
       { type: 'sales', icon: 'sales',  name: 'New Student — 30/90 Challenge', rate: 25, min: 15, max: 40, price: 2000 }
+    ]
+  },
+  /* 2PaP defaults from the "État funnel pub" doc of 17 Aug 2026 (funnel n°2,
+     réservation directe): €500/mo cap at €20-25/day, expected 8-16 booked
+     calls/mo (≈€31-62 per booking), show-up target ~65% (72h window + 4
+     reminders), 1-2 sales/mo median at €2,000. */
+  '2pap': {
+    currency: '€',
+    costs: { feePct: 2, perSale: 0, fixed: 0 },
+    steps: [
+      { type: 'traffic', icon: 'traffic', name: 'Pub Meta (FB + IG)', visitors: 200, cpc: 2.5, vari: 25 },
+      { type: 'page', icon: 'optin',    name: 'Page A — /plan-action',      rate: 95,  min: 85, max: 100 },
+      { type: 'page', icon: 'call',     name: 'Réserve un appel (Calendly)', rate: 7,   min: 4,  max: 10 },
+      { type: 'page', icon: 'thankyou', name: 'Page B — /appel-confirmé',   rate: 100, min: 100, max: 100 },
+      { type: 'page', icon: 'person',   name: 'Appel honoré (45 min)',      rate: 65,  min: 50, max: 80 },
+      { type: 'sales', icon: 'sales',   name: 'Vente — De Prof à Pro',      rate: 20,  min: 10, max: 35, price: 2000 }
     ]
   },
   optin: {
