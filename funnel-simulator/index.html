@@ -447,7 +447,11 @@ const TEMPLATES = {
 };
 
 /* ================= State ================= */
-const LS_KEY = 'solvFunnelLab.v1';
+/* One saved board per template, so the dropdown switches funnels without
+   losing edits. (Native confirm() is unavailable in sandboxed embeds.) */
+const LS_PREFIX = 'solvFunnelLab.v2.';
+const LS_LAST = 'solvFunnelLab.last';
+const LS_LEGACY = 'solvFunnelLab.v1';
 let state = null;
 let simResults = null;   // cleared on any state change
 let uid = 1;
@@ -472,28 +476,34 @@ function normalizeCosts(s) {
   s.costs = { feePct: clamp(num(c.feePct), 0, 100), perSale: Math.max(0, num(c.perSale)), fixed: Math.max(0, num(c.fixed)) };
 }
 
-function restore() {
+function restoreTpl(key) {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(LS_PREFIX + key);
     if (!raw) return false;
     const s = JSON.parse(raw);
     if (!s || !Array.isArray(s.steps) || !s.steps.length || s.steps[0].type !== 'traffic') return false;
     normalizeCurrency(s);
     normalizeCosts(s);
+    s.template = key;
     state = s;
     let maxN = 0;
     s.steps.forEach(st => { const n = parseInt(String(st.id).slice(1), 10); if (n > maxN) maxN = n; });
     uid = maxN + 1;
+    simResults = null;
     return true;
   } catch (e) { return false; }
 }
 
+function persist() {
+  try {
+    localStorage.setItem(LS_PREFIX + (state.template || 'custom'), JSON.stringify(state));
+    localStorage.setItem(LS_LAST, state.template || 'custom');
+  } catch (e) { /* storage may be unavailable */ }
+}
 let saveTimer = null;
 function scheduleSave() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage may be unavailable */ }
-  }, 250);
+  saveTimer = setTimeout(persist, 250);
 }
 
 /* ================= Math ================= */
@@ -984,6 +994,13 @@ function doExport() {
   });
   $('[data-a="close"]', back).addEventListener('click', () => back.remove());
 }
+function appConfirm(msg, onOk) {
+  const back = modal('Are you sure?', '<p style="margin:4px 0 0">' + esc(msg) + '</p>',
+    '<button class="btn" data-a="ok">Yes</button><button class="btn" data-a="close">Cancel</button>');
+  $('[data-a="close"]', back).addEventListener('click', () => back.remove());
+  $('[data-a="ok"]', back).addEventListener('click', () => { back.remove(); onOk(); });
+}
+
 function doImport() {
   const back = modal('Import funnel (paste JSON)',
     '<textarea placeholder=\'{"steps": [...]}\'></textarea>',
@@ -997,8 +1014,10 @@ function doImport() {
       s.steps.forEach(st => { if (!st.id) st.id = newId(); });
       normalizeCosts(s);
       normalizeCurrency(s);
+      s.template = TEMPLATES[s.template] ? s.template : $('#templateSel').value;
       state = s;
       simResults = null;
+      $('#templateSel').value = state.template;
       $('#currencySel').value = state.currency;
       back.remove();
       scheduleSave(); render();
@@ -1010,26 +1029,39 @@ function doImport() {
 
 /* ================= Wiring ================= */
 function init() {
-  if (!restore()) loadTemplate('solv');
+  /* migrate the old single-board save into the per-template store */
+  try {
+    const old = localStorage.getItem(LS_LEGACY);
+    if (old) {
+      const s = JSON.parse(old);
+      const key = s && TEMPLATES[s.template] ? s.template : 'solv';
+      if (!localStorage.getItem(LS_PREFIX + key)) localStorage.setItem(LS_PREFIX + key, old);
+      localStorage.setItem(LS_LAST, key);
+      localStorage.removeItem(LS_LEGACY);
+    }
+  } catch (e) { /* ignore */ }
+
+  const last = localStorage.getItem(LS_LAST);
+  const startKey = TEMPLATES[last] ? last : 'solv';
+  if (!restoreTpl(startKey)) loadTemplate(startKey);
   $('#templateSel').value = TEMPLATES[state.template] ? state.template : 'solv';
   $('#currencySel').value = ['€', '$', '£'].includes(state.currency) ? state.currency : '€';
 
+  /* switching is non-destructive: each template keeps its own saved board */
   $('#templateSel').addEventListener('change', e => {
-    if (confirm('Load the "' + e.target.selectedOptions[0].textContent + '" template? Your current board will be replaced.')) {
-      loadTemplate(e.target.value);
-      $('#currencySel').value = state.currency;
-      scheduleSave(); render();
-    } else {
-      e.target.value = TEMPLATES[state.template] ? state.template : 'solv';
-    }
+    persist();
+    const key = e.target.value;
+    if (!restoreTpl(key)) loadTemplate(key);
+    $('#currencySel').value = state.currency;
+    scheduleSave(); render();
   });
   $('#currencySel').addEventListener('change', e => { state.currency = e.target.value; touch(); });
   $('#btnReset').addEventListener('click', () => {
-    if (confirm('Reset the board to the selected template?')) {
+    appConfirm('Reset this board to the "' + $('#templateSel').selectedOptions[0].textContent + '" template defaults? Your edits on this funnel will be lost.', () => {
       loadTemplate($('#templateSel').value);
       $('#currencySel').value = state.currency;
       scheduleSave(); render();
-    }
+    });
   });
   $('#btnExport').addEventListener('click', doExport);
   $('#btnImport').addEventListener('click', doImport);
